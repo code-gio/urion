@@ -2,7 +2,8 @@
 // TYPE GUARDS
 // =====================================================
 
-import type { WorkspaceRole, Permission } from './permissions.js';
+import type { WorkspaceRole } from './database.js';
+import type { Permission } from './permissions.js';
 import { ROLE_PERMISSIONS } from './permissions.js';
 
 export function isWorkspaceOwner(role: WorkspaceRole): boolean {

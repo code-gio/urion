@@ -1,7 +1,8 @@
 <script lang="ts">
 	import NavMain from "./nav-main.svelte";
+	import NavActiveTools from "./nav-active-tools.svelte";
 	import NavUser from "$lib/components/shared/nav-user.svelte";
-	import ProjectSwitcher from "./projet-switcher.svelte";
+	import ProjectSwitcher from "./project-switcher.svelte";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import type { ComponentProps } from "svelte";
 	import { page } from "$app/state";
@@ -22,6 +23,7 @@
 		<ProjectSwitcher />
 	</Sidebar.Header>
 	<Sidebar.Content>
+		<NavActiveTools />
 		<NavMain />
 		<NavSecondary class="mt-auto" />
 

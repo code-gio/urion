@@ -3,7 +3,7 @@
 	import AppSidebar from "$lib/components/nav/app/app-sidebar.svelte";
 	import WorkspaceSidebar from "$lib/components/nav/workspace/workspace-sidebar.svelte";
 	import ProjectSidebar from "$lib/components/nav/project/project-sidebar.svelte";
-	import SiteHeader from "$lib/components/nav/site-header.svelte";	
+	import SiteHeader from "$lib/components/nav/site-header.svelte";
 	import { setLastWorkspace } from '$lib/utils/redirect.js';
 	import { setPortalState, usePortal } from '$lib/stores/portal.svelte.js';
 	import { page } from '$app/state';
@@ -66,7 +66,7 @@
 		<SiteHeader />
 		<div class="flex flex-1 flex-col">
 			<div class="@container/main flex flex-1 flex-col gap-2">
-				<div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+				<div class="flex flex-col gap-4 p-6 md:gap-6 md:p-8 ">
 					{@render children()}
 
 				</div>

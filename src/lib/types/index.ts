@@ -14,7 +14,11 @@ export * from './stores.js';
 export * from './utils.js';
 export * from './errors.js';
 export * from './guards.js';
+export * from './tools.js';
 
 // Keep existing nav types separate
 export * from './nav.js';
+
+// Backlinks types
+export * from './backlinks.js';
 
