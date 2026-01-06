@@ -1,0 +1,33 @@
+<script lang="ts">
+	import ProjectSidebar from "$lib/modules/project/components/nav/project-sidebar.svelte";
+	import AutomaticBreadcrumbs from "$lib/components/shared/automatic-breadcrumbs.svelte";
+	import { Separator } from "$lib/components/ui/separator/index.js";
+	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+	let { data, children } = $props();
+	const { user, profile, project, workspace, projects = [] } = $derived(data);
+	const workspaceId = $derived(workspace?.id || '');
+</script>
+
+<Sidebar.Provider>
+	<ProjectSidebar 
+		{user} 
+		{profile} 
+		{projects}
+		{workspaceId}
+		currentProject={project}
+	/>
+	<Sidebar.Inset>
+		<header
+			class="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+		>
+			<div class="flex items-center gap-2 px-4">
+				<Sidebar.Trigger class="-ms-1" />
+				<Separator orientation="vertical" class="me-2 data-[orientation=vertical]:h-4" />
+                <AutomaticBreadcrumbs />
+			</div>
+		</header>
+		<div class="flex flex-1 flex-col gap-4 p-4 pt-0">
+            {@render children()}
+		</div>
+	</Sidebar.Inset>
+</Sidebar.Provider>
