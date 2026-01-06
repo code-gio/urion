@@ -6,17 +6,17 @@
 	import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down";
 	import LogOutIcon from "@lucide/svelte/icons/log-out";
 	import { getInitials } from "$lib/utils";
-	import { useUser } from "$lib/stores/index.js";
+	import { usePortal } from "$lib/stores/portal.svelte.js";
 	import { page } from "$app/state";
 	import { resolveUserNav } from "$lib/config";
 	import { goto } from "$app/navigation";
 
 	const sidebar = useSidebar();
-	const userState = useUser();
+	const portal = usePortal();
 
 	// Get user from page data (fallback if state not synced yet)
 	const user = $derived(page.data?.user);
-	const profile = $derived(userState.profile);
+	const profile = $derived(portal.profile);
 
 	const displayName = $derived(
 		profile?.display_name || profile?.full_name || user?.email?.split("@")[0] || "User"

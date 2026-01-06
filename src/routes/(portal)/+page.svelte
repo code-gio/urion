@@ -2,20 +2,15 @@
 	import type { AppPageData } from '$lib/types';
 	import { Button } from '$lib/components/ui/button';
 	import { WorkspaceCreateDialog, WorkspaceCard, WorkspaceEmptyState } from '$lib/modules/workspace';
-	import { useUser } from '$lib/stores/index.js';
+	import { usePortal } from '$lib/stores/portal.svelte.js';
 
 	let { data }: { data: AppPageData } = $props();
 
-	const userState = useUser();
+	const portal = usePortal();
 
-	// Sync workspaces from page data
-	$effect(() => {
-		if (data.workspaces) {
-			userState.syncWorkspaces(data.workspaces);
-		}
-	});
-
-	const workspaces = $derived(userState.workspaces);
+	// Workspaces are already synced from parent layout via `me` payload
+	// Just read from stores - no need to sync again
+	const workspaces = $derived(portal.workspaces);
 
 	let dialogOpen = $state(false);
 </script>

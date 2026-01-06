@@ -8,10 +8,10 @@
 	import { toast } from 'svelte-sonner';
 	import type { WorkspaceRole } from '$lib/types';
 	import { memberInviteSchema } from '../schemas/member.js';
-	import { useWorkspace } from '$lib/stores/index.js';
+	import { usePortal } from '$lib/stores/portal.svelte.js';
 
-	const workspaceState = useWorkspace();
-	const workspaceId = $derived(workspaceState.current?.id || '');
+	const portal = usePortal();
+	const workspaceId = $derived(portal.currentWorkspaceId || '');
 
 	let inviteEmail = $state('');
 	let inviteRole = $state<WorkspaceRole>('member');

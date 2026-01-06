@@ -6,10 +6,10 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { toast } from 'svelte-sonner';
 	import { profileUpdateSchema } from '../schemas/profile.js';
-	import { useUser } from '$lib/stores/index.js';
+	import { usePortal } from '$lib/stores/portal.svelte.js';
 
-	const userState = useUser();
-	const profile = $derived(userState.profile);
+	const portal = usePortal();
+	const profile = $derived(portal.profile);
 
 	if (!profile) {
 		return;
@@ -49,7 +49,7 @@
 		isSaving = true;
 
 		try {
-			await userState.updateProfile({
+			await portal.updateProfile({
 				full_name: fullName || null,
 				display_name: displayName || null,
 				bio: bio || null,

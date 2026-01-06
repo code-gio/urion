@@ -17,7 +17,11 @@ export function getInitials(name: string | null | undefined): string {
 	if (!name) return "";
 	const nameParts = name.trim().split(" ");
 	if (nameParts.length === 1) {
-	  return nameParts[0].charAt(0).toUpperCase();
+	  const word = nameParts[0];
+	  if (word.length >= 2) {
+		return word.substring(0, 2).toUpperCase();
+	  }
+	  return (word.charAt(0) + word.charAt(0)).toUpperCase();
 	}
 	const firstInitial = nameParts[0].charAt(0).toUpperCase();
 	const lastInitial = nameParts[nameParts.length - 1].charAt(0).toUpperCase();

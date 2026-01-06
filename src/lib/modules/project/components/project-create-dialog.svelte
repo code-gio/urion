@@ -8,15 +8,19 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { toast } from 'svelte-sonner';
 	import { projectCreateSchema } from '../schemas/project.js';
-	import { useWorkspace, useProject } from '$lib/stores/index.js';
+	import { usePortal } from '$lib/stores/portal.svelte.js';
 
-	let { open = $bindable(false) }: { open?: boolean } = $props();
+	let { open = $bindable(false), workspaceId: propWorkspaceId }: { open?: boolean; workspaceId?: string } = $props();
 
-	const workspaceState = useWorkspace();
-	const projectState = useProject();
+	const portal = usePortal();
 
-	const workspaceId = $derived(workspaceState.current?.id || '');
-	const workspaceSlug = $derived(workspaceState.current?.slug || '');
+	const workspaceId = $derived(propWorkspaceId || portal.currentWorkspaceId || '');
+	const workspace = $derived(
+		propWorkspaceId 
+			? portal.workspaces.find(w => w.id === propWorkspaceId) || null
+			: portal.currentWorkspace
+	);
+	const workspaceSlug = $derived(workspace?.slug || '');
 
 	const workspaceSlugFromPath = $derived.by(() => {
 		const pathname = page.url.pathname;
@@ -70,7 +74,7 @@
 		isCreating = true;
 
 		try {
-			const project = await projectState.createProject(
+			const project = await portal.createProject(
 				workspaceId,
 				trimmedName,
 				projectSlug,

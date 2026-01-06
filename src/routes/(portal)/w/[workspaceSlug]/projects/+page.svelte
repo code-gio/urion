@@ -4,24 +4,17 @@
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { ProjectCreateDialog } from '$lib/modules/project/components/index.js';
-	import { useWorkspace, useProject } from '$lib/stores/index.js';
+	import { usePortal } from '$lib/stores/portal.svelte.js';
 	import type { Project } from '$lib/types';
 
 	let { data }: { data: { projects: Project[]; workspace: any } } = $props();
 
-	const workspaceState = useWorkspace();
-	const projectState = useProject();
+	const portal = usePortal();
 
-	// Sync projects from server data
-	$effect(() => {
-		if (data.workspace && data.projects) {
-			projectState.syncProjectList(data.workspace.id, data.projects);
-		}
-	});
-
-	const workspace = $derived(workspaceState.current || data.workspace);
+	// Read from unified portal store
+	const workspace = $derived(portal.currentWorkspace);
 	const workspaceId = $derived(workspace?.id || '');
-	const projects = $derived(workspaceId ? projectState.getProjects(workspaceId) : []);
+	const projects = $derived(portal.currentWorkspaceProjects);
 	let dialogOpen = $state(false);
 </script>
 

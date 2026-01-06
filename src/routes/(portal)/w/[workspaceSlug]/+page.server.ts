@@ -1,7 +1,6 @@
 import type { PageServerLoad } from './$types';
 import type { WorkspacePageData, WorkspaceMemberWithProfile } from '$lib/types';
 import type { WorkspaceRole } from '$lib/types';
-import { getWorkspaceBySlug } from '$lib/utils/workspace.js';
 
 export const load: PageServerLoad = async ({
 	params,

@@ -5,7 +5,7 @@
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import type { ComponentProps } from "svelte";
 	import { page } from "$app/state";
-
+	import NavSecondary from "../../shared/nav-secondary.svelte";
 	let {
 		ref = $bindable(null),
 		collapsible = "icon",
@@ -23,6 +23,8 @@
 	</Sidebar.Header>
 	<Sidebar.Content>
 		<WorkspaceNavMain />
+		<NavSecondary class="mt-auto" />
+
 	</Sidebar.Content>
 	<Sidebar.Footer>
 		<NavUser />

@@ -1,55 +1,27 @@
 import type { LayoutServerLoad } from './$types';
 import { getProjectBySlug } from '$lib/utils/workspace.js';
+import { error } from '@sveltejs/kit';
 
-export const load: LayoutServerLoad = async ({
-	params,
-	locals: { safeGetSession, supabase },
-	parent,
-}) => {
+export const load: LayoutServerLoad = async ({ params, locals: { safeGetSession, supabase }, parent }) => {
 	const { session, user } = await safeGetSession();
 
 	if (!session || !user) {
-		return {
-			project: null,
-			workspace: null,
-			userRole: null,
-			projects: [],
-			user: null,
-			profile: null,
-		};
+		throw error(401, 'Unauthorized');
 	}
 
 	const parentData = await parent();
 	const workspace = parentData.workspace;
 
 	if (!workspace) {
-		return {
-			project: null,
-			workspace: null,
-			userRole: null,
-			projects: [],
-			user: parentData.user,
-			profile: parentData.profile,
-		};
+		throw error(404, 'Workspace not found');
 	}
 
 	const project = await getProjectBySlug(supabase, workspace.id, params.projectSlug);
 
-	// Load projects for the workspace
-	const { data: projects } = await supabase
-		.from('projects')
-		.select('*')
-		.eq('workspace_id', workspace.id)
-		.eq('status', 'active')
-		.order('created_at', { ascending: false });
-
 	return {
 		project,
-		workspace,
+		workspace: parentData.workspace,
 		userRole: parentData.userRole,
-		projects: projects || [],
-		user: parentData.user,
-		profile: parentData.profile,
 	};
 };
 

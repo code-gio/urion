@@ -2,7 +2,7 @@
 // CONTEXT TYPES
 // =====================================================
 
-import type { Workspace, WorkspaceRole, Profile, Project } from './database.js';
+import type { Workspace, WorkspaceRole, Profile, Project, WorkspaceListItem } from './database.js';
 
 // -------------------------------------------------
 // Workspace Context
@@ -40,5 +40,15 @@ export interface AuthContext {
   user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+}
+
+// -------------------------------------------------
+// Me Payload (unified data structure)
+// -------------------------------------------------
+export interface MePayload {
+  user: { id: string; email: string | null };
+  profile: Profile | null;
+  workspaces: WorkspaceListItem[];
+  projects: Array<{ id: string; workspace_id: string; name: string; slug: string }>;
 }
 

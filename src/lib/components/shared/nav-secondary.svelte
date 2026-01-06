@@ -2,25 +2,24 @@
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import type { WithoutChildren } from "$lib/utils.js";
 	import type { ComponentProps } from "svelte";
-	import type { Icon } from "@tabler/icons-svelte";
+	import { navSecondary } from "$lib/config.js";
 
 	let {
-		items,
 		...restProps
-	}: { items: { title: string; url: string; icon: Icon }[] } & WithoutChildren<
-		ComponentProps<typeof Sidebar.Group>
-	> = $props();
+	}: WithoutChildren<ComponentProps<typeof Sidebar.Group>> = $props();
 </script>
 
 <Sidebar.Group {...restProps}>
 	<Sidebar.GroupContent>
 		<Sidebar.Menu>
-			{#each items as item (item.title)}
+			{#each navSecondary as item (item.title)}
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton>
 						{#snippet child({ props })}
 							<a href={item.url} {...props}>
-								<item.icon />
+								{#if item.icon}
+									<item.icon />
+								{/if}
 								<span>{item.title}</span>
 							</a>
 						{/snippet}

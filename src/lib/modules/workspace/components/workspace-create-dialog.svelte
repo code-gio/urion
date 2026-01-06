@@ -8,8 +8,11 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { toast } from 'svelte-sonner';
 	import { workspaceCreateSchema } from '../schemas/workspace.js';
+	import { usePortal } from '$lib/stores/portal.svelte.js';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
+
+	const portal = usePortal();
 
 	let workspaceName = $state('');
 	let workspaceSlug = $derived(generateSlug(workspaceName));
@@ -49,30 +52,7 @@
 		isCreating = true;
 
 		try {
-			const response = await fetch('/api/workspaces', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				credentials: 'include',
-				body: JSON.stringify({
-					name: trimmedName,
-					slug: workspaceSlug,
-				}),
-			});
-
-			if (!response.ok) {
-				let errorMessage = 'Failed to create workspace';
-				try {
-					const errorData = await response.json();
-					errorMessage = errorData.error || errorData.message || errorMessage;
-				} catch {
-					errorMessage = `Server error: ${response.status} ${response.statusText}`;
-				}
-				throw new Error(errorMessage);
-			}
-
-			const { workspace } = await response.json();
+			const workspace = await portal.createWorkspace(trimmedName, workspaceSlug);
 			setLastWorkspace(workspace.slug);
 			toast.success('Workspace created successfully');
 			open = false;

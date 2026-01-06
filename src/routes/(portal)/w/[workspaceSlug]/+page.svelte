@@ -4,28 +4,21 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
-	import { useWorkspace, useProject } from '$lib/stores/index.js';
+	import { usePortal } from '$lib/stores/portal.svelte.js';
 
 	let { data }: { data: WorkspacePageData } = $props();
 
-	const workspaceState = useWorkspace();
-	const projectState = useProject();
+	const portal = usePortal();
 
-	// Sync projects from server data
-	$effect(() => {
-		if (data.workspace && data.projects) {
-			projectState.syncProjectList(data.workspace.id, data.projects);
-		}
-	});
-
-	const workspace = $derived(workspaceState.current);
-	const projects = $derived(workspace ? projectState.getProjects(workspace.id) : []);
+	// Read from unified portal store
+	const workspace = $derived(portal.currentWorkspace);
+	const projects = $derived(portal.currentWorkspaceProjects);
 	const hasProjects = $derived(projects.length > 0);
 </script>
 
 <div class="container mx-auto py-8 px-4">
 	<div class="mb-8">
-		<h1 class="text-3xl font-bold mb-2">Welcome to {workspace?.name || data.workspace?.name}</h1>
+		<h1 class="text-3xl font-bold mb-2">Welcome to {workspace?.name}</h1>
 		<p class="text-muted-foreground">Your workspace dashboard</p>
 	</div>
 
@@ -85,7 +78,7 @@
 				{#each projects.slice(0, 6) as project}
 					<Card
 						class="cursor-pointer hover:shadow-lg transition-shadow"
-						onclick={() => goto(`/w/${workspace?.slug || data.workspace?.slug}/p/${project.slug}`)}
+						onclick={() => goto(`/w/${workspace?.slug}/p/${project.slug}`)}
 					>
 						<CardHeader>
 							<CardTitle>{project.name}</CardTitle>

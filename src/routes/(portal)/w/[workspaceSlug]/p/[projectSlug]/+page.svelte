@@ -2,12 +2,12 @@
 	import type { ProjectPageData } from '$lib/types';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
-	import { useProject } from '$lib/stores/index.js';
+	import { usePortal } from '$lib/stores/portal.svelte.js';
 
 	let { data }: { data: ProjectPageData } = $props();
 
-	const projectState = useProject();
-	const project = $derived(projectState.current || data.project);
+	const portal = usePortal();
+	const project = $derived(portal.currentProject);
 </script>
 
 <div class="container mx-auto py-8 px-4">

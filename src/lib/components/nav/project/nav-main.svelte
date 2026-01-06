@@ -29,11 +29,11 @@
 </script>
 
 <Sidebar.Group>
-	<Sidebar.GroupLabel>Platform</Sidebar.GroupLabel>
+	<Sidebar.GroupLabel>Project Overview</Sidebar.GroupLabel>
 	<Sidebar.Menu>
 		{#each navMain as item (item.title)}
 			{#if item.items && item.items.length > 0}
-				<Collapsible.Root open={isActive(item.url)} class="group/collapsible">
+				<Collapsible.Root open={isActive(item.url || '')} class="group/collapsible">
 					{#snippet child({ props })}
 						<Sidebar.MenuItem {...props}>
 							<Collapsible.Trigger>
@@ -69,7 +69,7 @@
 				</Collapsible.Root>
 			{:else}
 				<Sidebar.MenuItem>
-					<Sidebar.MenuButton tooltipContent={item.title} isActive={isActive(item.url)}>
+					<Sidebar.MenuButton tooltipContent={item.title} isActive={isActive(item.url || '')}>
 						{#snippet child({ props })}
 							<a href={item.url} {...props}>
 								{#if item.icon}

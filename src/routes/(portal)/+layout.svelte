@@ -1,29 +1,22 @@
 <script lang="ts">
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-	import AppSidebar from "$lib/components/app-sidebar.svelte";
-	import SiteHeader from "$lib/components/site-header.svelte";
+	import AppSidebar from "$lib/components/nav/app/app-sidebar.svelte";
+	import WorkspaceSidebar from "$lib/components/nav/workspace/workspace-sidebar.svelte";
+	import ProjectSidebar from "$lib/components/nav/project/project-sidebar.svelte";
+	import SiteHeader from "$lib/components/nav/site-header.svelte";	
 	import { setLastWorkspace } from '$lib/utils/redirect.js';
-	import { initState } from '$lib/stores/state-provider.svelte.js';
-	import type { Profile, WorkspaceListItem } from '$lib/types';
+	import { setPortalState, usePortal } from '$lib/stores/portal.svelte.js';
 	import { page } from '$app/state';
 
 	let { data, children } = $props();
 
-	// Initialize state classes
-	const states = initState();
+	// Initialize portal state (idempotent)
+	const portal = setPortalState();
 
-	// Sync user state from server data
+	// Hydrate store from me payload (simplified - single call)
 	$effect(() => {
-		if (data.profile) {
-			states.user.syncProfile(data.profile as Profile);
-		}
-	});
-
-	// Sync workspaces from page data if available
-	$effect(() => {
-		const pageData = page.data as { workspaces?: unknown[] } | undefined;
-		if (pageData?.workspaces) {
-			states.user.syncWorkspaces(pageData.workspaces as WorkspaceListItem[]);
+		if (data.me) {
+			portal.hydrate(data.me);
 		}
 	});
 
@@ -35,12 +28,40 @@
 			setLastWorkspace(workspaceMatch[1]);
 		}
 	});
+
+	// Determine which sidebar to show based on current route
+	const getSidebarType = (pathname: string): 'app' | 'workspace' | 'project' => {
+		const segments = pathname.split("/").filter(Boolean);
+		
+		// Project route: /w/[workspaceSlug]/p/[projectSlug]
+		const isProjectRoute = segments[0] === "w" && segments[1] && segments[2] === "p" && segments.length >= 4;
+		if (isProjectRoute) {
+			return 'project';
+		}
+		
+		// Workspace route: /w/[workspaceSlug]
+		const isWorkspaceRoute = segments[0] === "w" && segments.length >= 2;
+		if (isWorkspaceRoute) {
+			return 'workspace';
+		}
+		
+		// Default to app sidebar
+		return 'app';
+	};
+
+	const sidebarType = $derived(getSidebarType(page.url.pathname));
 </script>
 
 <Sidebar.Provider
-	style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
+	style="--header-height: calc(var(--spacing) * 12);"
 >
-	<AppSidebar variant="inset" />
+	{#if sidebarType === 'project'}
+		<ProjectSidebar variant="inset" />
+	{:else if sidebarType === 'workspace'}
+		<WorkspaceSidebar variant="inset" />
+	{:else}
+		<AppSidebar variant="inset" />
+	{/if}
 	<Sidebar.Inset>
 		<SiteHeader />
 		<div class="flex flex-1 flex-col">
