@@ -2,23 +2,27 @@
 	import type { ProjectPageData } from '$lib/types';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
+	import { useProject } from '$lib/stores/index.js';
 
 	let { data }: { data: ProjectPageData } = $props();
+
+	const projectState = useProject();
+	const project = $derived(projectState.current || data.project);
 </script>
 
 <div class="container mx-auto py-8 px-4">
 	<div class="mb-8">
-		<h1 class="text-3xl font-bold mb-2">{data.project?.name}</h1>
+		<h1 class="text-3xl font-bold mb-2">{project?.name}</h1>
 		<div class="flex items-center gap-2">
-			<Badge variant="outline">{data.project?.status}</Badge>
-			{#if data.project?.website_url}
+			<Badge variant="outline">{project?.status}</Badge>
+			{#if project?.website_url}
 				<a
-					href={data.project.website_url}
+					href={project.website_url}
 					target="_blank"
 					rel="noopener noreferrer"
 					class="text-sm text-muted-foreground hover:underline"
 				>
-					{data.project.website_url}
+					{project.website_url}
 				</a>
 			{/if}
 		</div>

@@ -1,44 +1,45 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { setLastWorkspace } from '$lib/utils/redirect.js';
 	import { page } from '$app/state';
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import { useSidebar } from "$lib/components/ui/sidebar/index.js";
 	import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down";
 	import PlusIcon from "@lucide/svelte/icons/plus";
-	import FolderIcon from "@lucide/svelte/icons/folder";
-	import { ProjectCreateDialog } from "$lib/modules/project/components/index.js";
-	import { useWorkspace, useProject } from "$lib/stores/index.js";
-	import type { Project } from "$lib/types";
+	import BuildingIcon from "@lucide/svelte/icons/building";
+	import { WorkspaceCreateDialog } from "$lib/modules/workspace/components/index.js";
+	import { useUser, useWorkspace } from "$lib/stores/index.js";
+	import type { WorkspaceListItem } from "$lib/types";
 
 	const sidebar = useSidebar();
+	const userState = useUser();
 	const workspaceState = useWorkspace();
-	const projectState = useProject();
 	let dialogOpen = $state(false);
 
-	const workspaceId = $derived(workspaceState.current?.id || '');
-	const projects = $derived(workspaceId ? projectState.getProjects(workspaceId) : []);
-	const currentProject = $derived(projectState.current);
+	// Get workspaces from userState, fallback to workspaceState.list
+	const workspaces = $derived(
+		userState.workspaces.length > 0 ? userState.workspaces : workspaceState.list
+	);
+	const currentWorkspace = $derived(workspaceState.current ? {
+		id: workspaceState.current.id,
+		name: workspaceState.current.name,
+		slug: workspaceState.current.slug,
+		role: workspaceState.userRole,
+		status: 'active' as const,
+		created_at: workspaceState.current.created_at,
+	} : null);
 
-	const activeProject = $derived(currentProject || projects[0] || null);
-	const displayName = $derived(activeProject?.name || 'No projects');
-	const displayStatus = $derived(activeProject?.status || '');
+	const activeWorkspace = $derived(currentWorkspace || workspaces[0] || null);
+	const displayName = $derived(activeWorkspace?.name || 'No workspaces');
+	const displayRole = $derived(activeWorkspace?.role || '');
 
-	const workspaceSlug = $derived.by(() => {
-		const pathname = page.url.pathname;
-		const match = pathname.match(/^\/w\/([^/]+)/);
-		return match ? match[1] : '';
-	});
-
-	function handleProjectSelect(project: Project) {
-		if (workspaceSlug) {
-			goto(`/w/${workspaceSlug}/p/${project.slug}`);
-		} else {
-			goto(`p/${project.slug}`);
-		}
+	function handleWorkspaceSelect(workspace: WorkspaceListItem) {
+		setLastWorkspace(workspace.slug);
+		goto(`/w/${workspace.slug}`);
 	}
 
-	function handleCreateProject() {
+	function handleCreateWorkspace() {
 		dialogOpen = true;
 	}
 </script>
@@ -56,14 +57,14 @@
 						<div
 							class="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg"
 						>
-							<FolderIcon class="size-4" />
+							<BuildingIcon class="size-4" />
 						</div>
 						<div class="grid flex-1 text-start text-sm leading-tight">
 							<span class="truncate font-medium">
 								{displayName}
 							</span>
-							{#if displayStatus}
-								<span class="truncate text-xs capitalize">{displayStatus}</span>
+							{#if displayRole}
+								<span class="truncate text-xs capitalize">{displayRole}</span>
 							{/if}
 						</div>
 						<ChevronsUpDownIcon class="ms-auto" />
@@ -76,42 +77,41 @@
 				side={sidebar.isMobile ? "bottom" : "right"}
 				sideOffset={4}
 			>
-				<DropdownMenu.Label class="text-muted-foreground text-xs">Projects</DropdownMenu.Label>
-				{#if projects.length === 0}
+				<DropdownMenu.Label class="text-muted-foreground text-xs">Workspaces</DropdownMenu.Label>
+				{#if workspaces.length === 0}
 					<DropdownMenu.Item disabled class="gap-2 p-2">
 						<div class="flex size-6 items-center justify-center rounded-md border">
-							<FolderIcon class="size-3.5 shrink-0" />
+							<BuildingIcon class="size-3.5 shrink-0" />
 						</div>
-						<span class="text-muted-foreground">No projects yet</span>
+						<span class="text-muted-foreground">No workspaces yet</span>
 					</DropdownMenu.Item>
 				{:else}
-					{#each projects as project, index (project.id)}
+					{#each workspaces as workspace, index (workspace.id)}
 						<DropdownMenu.Item 
-							onSelect={() => handleProjectSelect(project)} 
+							onSelect={() => handleWorkspaceSelect(workspace)} 
 							class="gap-2 p-2"
 						>
 							<div class="flex size-6 items-center justify-center rounded-md border">
-								<FolderIcon class="size-3.5 shrink-0" />
+								<BuildingIcon class="size-3.5 shrink-0" />
 							</div>
-							{project.name}
+							{workspace.name}
 							<DropdownMenu.Shortcut>⌘{index + 1}</DropdownMenu.Shortcut>
 						</DropdownMenu.Item>
 					{/each}
 				{/if}
 				<DropdownMenu.Separator />
-				<DropdownMenu.Item onSelect={handleCreateProject} class="gap-2 p-2">
+				<DropdownMenu.Item onSelect={handleCreateWorkspace} class="gap-2 p-2">
 					<div
 						class="flex size-6 items-center justify-center rounded-md border bg-transparent"
 					>
 						<PlusIcon class="size-4" />
 					</div>
-					<div class="text-muted-foreground font-medium">Add project</div>
+					<div class="text-muted-foreground font-medium">Add workspace</div>
 				</DropdownMenu.Item>
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
 	</Sidebar.MenuItem>
 </Sidebar.Menu>
 
-{#if workspaceId}
-	<ProjectCreateDialog bind:open={dialogOpen} />
-{/if}
+<WorkspaceCreateDialog bind:open={dialogOpen} />
+

@@ -4,15 +4,28 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
+	import { useWorkspace, useProject } from '$lib/stores/index.js';
 
 	let { data }: { data: WorkspacePageData } = $props();
 
-	const hasProjects = $derived(data.projects && data.projects.length > 0);
+	const workspaceState = useWorkspace();
+	const projectState = useProject();
+
+	// Sync projects from server data
+	$effect(() => {
+		if (data.workspace && data.projects) {
+			projectState.syncProjectList(data.workspace.id, data.projects);
+		}
+	});
+
+	const workspace = $derived(workspaceState.current);
+	const projects = $derived(workspace ? projectState.getProjects(workspace.id) : []);
+	const hasProjects = $derived(projects.length > 0);
 </script>
 
 <div class="container mx-auto py-8 px-4">
 	<div class="mb-8">
-		<h1 class="text-3xl font-bold mb-2">Welcome to {data.workspace?.name}</h1>
+		<h1 class="text-3xl font-bold mb-2">Welcome to {workspace?.name || data.workspace?.name}</h1>
 		<p class="text-muted-foreground">Your workspace dashboard</p>
 	</div>
 
@@ -69,10 +82,10 @@
 			</div>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				{#each data.projects.slice(0, 6) as project}
+				{#each projects.slice(0, 6) as project}
 					<Card
 						class="cursor-pointer hover:shadow-lg transition-shadow"
-						onclick={() => goto(`/w/${data.workspace?.slug}/p/${project.slug}`)}
+						onclick={() => goto(`/w/${workspace?.slug || data.workspace?.slug}/p/${project.slug}`)}
 					>
 						<CardHeader>
 							<CardTitle>{project.name}</CardTitle>

@@ -74,6 +74,11 @@ export const POST: RequestHandler = async (event) => {
 	// Clear rate limit on success
 	await clearRateLimit(event, 'create');
 
-	return json(project, { status: 201 });
+	return json(project, {
+		status: 201,
+		headers: {
+			'Cache-Control': 'no-cache, no-store, must-revalidate',
+		},
+	});
 };
 

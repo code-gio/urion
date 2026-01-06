@@ -14,6 +14,8 @@ export const load: LayoutServerLoad = async ({
 			workspace: null,
 			userRole: null,
 			projects: [],
+			user: null,
+			profile: null,
 		};
 	}
 
@@ -26,6 +28,8 @@ export const load: LayoutServerLoad = async ({
 			workspace: null,
 			userRole: null,
 			projects: [],
+			user: parentData.user,
+			profile: parentData.profile,
 		};
 	}
 
@@ -44,6 +48,8 @@ export const load: LayoutServerLoad = async ({
 		workspace,
 		userRole: parentData.userRole,
 		projects: projects || [],
+		user: parentData.user,
+		profile: parentData.profile,
 	};
 };
 

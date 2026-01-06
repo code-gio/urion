@@ -45,7 +45,11 @@ export const GET: RequestHandler = async (event) => {
 		throw error(404, 'Workspace not found');
 	}
 
-	return json(workspace);
+	return json(workspace, {
+		headers: {
+			'Cache-Control': 'private, max-age=300, stale-while-revalidate=60',
+		},
+	});
 };
 
 export const PATCH: RequestHandler = async (event) => {
@@ -116,7 +120,11 @@ export const PATCH: RequestHandler = async (event) => {
 		throw error(500, 'Failed to update workspace');
 	}
 
-	return json(workspace);
+	return json(workspace, {
+		headers: {
+			'Cache-Control': 'no-cache, no-store, must-revalidate',
+		},
+	});
 };
 
 export const DELETE: RequestHandler = async (event) => {
@@ -155,6 +163,10 @@ export const DELETE: RequestHandler = async (event) => {
 		throw error(500, 'Failed to delete workspace');
 	}
 
-	return json({ success: true });
+	return json({ success: true }, {
+		headers: {
+			'Cache-Control': 'no-cache, no-store, must-revalidate',
+		},
+	});
 };
 

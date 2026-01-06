@@ -1,7 +1,7 @@
 <script lang="ts">
-	import NavMain from "./nav-main.svelte";
+	import WorkspaceNavMain from "./workspace-nav-main.svelte";
 	import NavUser from "$lib/components/shared/nav-user.svelte";
-	import ProjectSwitcher from "./projet-switcher.svelte";
+	import WorkspaceSwitcher from "./workspace-switcher.svelte";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import type { ComponentProps } from "svelte";
 	import { page } from "$app/state";
@@ -19,10 +19,10 @@
 {#if user}
 <Sidebar.Root {collapsible} {...restProps}>
 	<Sidebar.Header>
-		<ProjectSwitcher />
+		<WorkspaceSwitcher />
 	</Sidebar.Header>
 	<Sidebar.Content>
-		<NavMain />
+		<WorkspaceNavMain />
 	</Sidebar.Content>
 	<Sidebar.Footer>
 		<NavUser />

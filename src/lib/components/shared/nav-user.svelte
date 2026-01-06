@@ -3,33 +3,32 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import { useSidebar } from "$lib/components/ui/sidebar/index.js";
-	import BadgeCheckIcon from "@lucide/svelte/icons/badge-check";
-	import BellIcon from "@lucide/svelte/icons/bell";
 	import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down";
-	import CreditCardIcon from "@lucide/svelte/icons/credit-card";
 	import LogOutIcon from "@lucide/svelte/icons/log-out";
-	import SparklesIcon from "@lucide/svelte/icons/sparkles";
 	import { getInitials } from "$lib/utils";
-	import type { Profile } from "$lib/types";
-	import type { User } from "@supabase/supabase-js";
+	import { useUser } from "$lib/stores/index.js";
+	import { page } from "$app/state";
+	import { resolveUserNav } from "$lib/config";
+	import { goto } from "$app/navigation";
 
-	let {
-		user,
-		profile = null,
-	}: {
-		user: User;
-		profile?: Profile | null;
-	} = $props();
 	const sidebar = useSidebar();
+	const userState = useUser();
+
+	// Get user from page data (fallback if state not synced yet)
+	const user = $derived(page.data?.user);
+	const profile = $derived(userState.profile);
 
 	const displayName = $derived(
-		profile?.display_name || profile?.full_name || user.email?.split("@")[0] || "User"
+		profile?.display_name || profile?.full_name || user?.email?.split("@")[0] || "User"
 	);
-	const email = $derived(profile?.email || user.email || "");
+	const email = $derived(profile?.email || user?.email || "");
 	const avatarUrl = $derived(profile?.avatar_url || null);
 	const initials = $derived(getInitials(displayName));
+
+	const userNavItems = $derived(resolveUserNav());
 </script>
 
+{#if user}
 <Sidebar.Menu>
 	<Sidebar.MenuItem>
 		<DropdownMenu.Root>
@@ -80,25 +79,14 @@
 				</DropdownMenu.Label>
 				<DropdownMenu.Separator />
 				<DropdownMenu.Group>
-					<DropdownMenu.Item>
-						<SparklesIcon />
-						Upgrade to Pro
-					</DropdownMenu.Item>
-				</DropdownMenu.Group>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Group>
-					<DropdownMenu.Item>
-						<BadgeCheckIcon />
-						Account
-					</DropdownMenu.Item>
-					<DropdownMenu.Item>
-						<CreditCardIcon />
-						Billing
-					</DropdownMenu.Item>
-					<DropdownMenu.Item>
-						<BellIcon />
-						Notifications
-					</DropdownMenu.Item>
+					{#each userNavItems as item}
+						<DropdownMenu.Item onclick={() => item.url && goto(item.url)}>
+							{#if item.icon}
+								<item.icon />
+							{/if}
+							{item.title}
+						</DropdownMenu.Item>
+					{/each}
 				</DropdownMenu.Group>
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item>
@@ -109,3 +97,4 @@
 		</DropdownMenu.Root>
 	</Sidebar.MenuItem>
 </Sidebar.Menu>
+{/if}

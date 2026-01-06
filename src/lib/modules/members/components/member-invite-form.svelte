@@ -8,8 +8,10 @@
 	import { toast } from 'svelte-sonner';
 	import type { WorkspaceRole } from '$lib/types';
 	import { memberInviteSchema } from '../schemas/member.js';
+	import { useWorkspace } from '$lib/stores/index.js';
 
-	let { workspaceId }: { workspaceId: string } = $props();
+	const workspaceState = useWorkspace();
+	const workspaceId = $derived(workspaceState.current?.id || '');
 
 	let inviteEmail = $state('');
 	let inviteRole = $state<WorkspaceRole>('member');

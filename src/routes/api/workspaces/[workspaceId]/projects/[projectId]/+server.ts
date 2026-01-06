@@ -56,7 +56,11 @@ export const PATCH: RequestHandler = async (event) => {
 		throw error(500, 'Failed to update project');
 	}
 
-	return json(project);
+	return json(project, {
+		headers: {
+			'Cache-Control': 'no-cache, no-store, must-revalidate',
+		},
+	});
 };
 
 export const DELETE: RequestHandler = async (event) => {
@@ -99,6 +103,10 @@ export const DELETE: RequestHandler = async (event) => {
 		throw error(500, 'Failed to delete project');
 	}
 
-	return json({ success: true });
+	return json({ success: true }, {
+		headers: {
+			'Cache-Control': 'no-cache, no-store, must-revalidate',
+		},
+	});
 };
 

@@ -30,7 +30,11 @@ export const GET: RequestHandler = async (event) => {
 		throw error(404, 'Profile not found');
 	}
 
-	return json(profile as Profile);
+	return json(profile as Profile, {
+		headers: {
+			'Cache-Control': 'private, max-age=300, stale-while-revalidate=60',
+		},
+	});
 };
 
 export const PATCH: RequestHandler = async (event) => {
@@ -89,6 +93,10 @@ export const PATCH: RequestHandler = async (event) => {
 		throw error(500, 'Failed to update profile');
 	}
 
-	return json(profile as Profile);
+	return json(profile as Profile, {
+		headers: {
+			'Cache-Control': 'no-cache, no-store, must-revalidate',
+		},
+	});
 };
 

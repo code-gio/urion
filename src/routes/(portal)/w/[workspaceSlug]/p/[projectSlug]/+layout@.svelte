@@ -3,19 +3,30 @@
 	import AutomaticBreadcrumbs from "$lib/components/shared/automatic-breadcrumbs.svelte";
 	import { Separator } from "$lib/components/ui/separator/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+	import { useProject, useWorkspace, initState } from "$lib/stores/index.js";
+	import type { Project, Workspace } from "$lib/types";
+
 	let { data, children } = $props();
-	const { user, profile, project, workspace, projects = [] } = $derived(data);
-	const workspaceId = $derived(workspace?.id || '');
+	const { project, workspace, projects = [] } = $derived(data);
+
+	// Initialize state if not already initialized (for parallel layouts)
+	const states = initState();
+	const projectState = useProject();
+	const workspaceState = useWorkspace();
+
+	// Sync project state from server data
+	$effect(() => {
+		if (project) {
+			projectState.syncProject(project as Project);
+		}
+		if (workspace && projects) {
+			projectState.syncProjectList(workspace.id, projects as Project[]);
+		}
+	});
 </script>
 
 <Sidebar.Provider>
-	<ProjectSidebar 
-		{user} 
-		{profile} 
-		{projects}
-		{workspaceId}
-		currentProject={project}
-	/>
+	<ProjectSidebar />
 	<Sidebar.Inset>
 		<header
 			class="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"

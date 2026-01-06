@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { Profile } from '$lib/types';
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
@@ -7,14 +6,30 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { toast } from 'svelte-sonner';
 	import { profileUpdateSchema } from '../schemas/profile.js';
+	import { useUser } from '$lib/stores/index.js';
 
-	let { profile }: { profile: Profile } = $props();
+	const userState = useUser();
+	const profile = $derived(userState.profile);
+
+	if (!profile) {
+		return;
+	}
 
 	let fullName = $state(profile.full_name || '');
 	let displayName = $state(profile.display_name || '');
 	let bio = $state(profile.bio || '');
 	let avatarUrl = $state(profile.avatar_url || '');
 	let isSaving = $state(false);
+
+	// Sync form fields when profile changes
+	$effect(() => {
+		if (profile) {
+			fullName = profile.full_name || '';
+			displayName = profile.display_name || '';
+			bio = profile.bio || '';
+			avatarUrl = profile.avatar_url || '';
+		}
+	});
 
 	async function saveProfile() {
 		// Validate with schema
@@ -34,23 +49,12 @@
 		isSaving = true;
 
 		try {
-			const response = await fetch('/api/profile', {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					full_name: fullName || null,
-					display_name: displayName || null,
-					bio: bio || null,
-					avatar_url: avatarUrl || null,
-				}),
+			await userState.updateProfile({
+				full_name: fullName || null,
+				display_name: displayName || null,
+				bio: bio || null,
+				avatar_url: avatarUrl || null,
 			});
-
-			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.error || 'Failed to update profile');
-			}
 
 			toast.success('Profile updated successfully');
 		} catch (error) {
