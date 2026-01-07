@@ -289,7 +289,7 @@ export function isTool(obj: any): obj is Tool {
 }
 
 export function isToolWithActivation(obj: any): obj is ToolWithActivation {
-	return isTool(obj) && typeof obj.is_activated === 'boolean';
+	return isTool(obj) && 'is_activated' in obj && typeof obj.is_activated === 'boolean';
 }
 
 export function hasRequiredRole(userRole: WorkspaceRole, requiredRole: WorkspaceRole): boolean {

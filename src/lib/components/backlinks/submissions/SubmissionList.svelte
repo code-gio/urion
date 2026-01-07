@@ -4,15 +4,18 @@
 	import SubmissionCard from './SubmissionCard.svelte';
 	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
 	import * as Empty from '$lib/components/ui/empty/index.js';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 
 	let {
 		submissions,
+		loading = false,
 		onUpdateStatus,
 		onViewDetails,
 		onDelete,
 	}: {
 		submissions: BacklinkSubmissionWithSite[];
+		loading?: boolean;
 		onUpdateStatus?: (submission: BacklinkSubmission, status: SubmissionStatus) => void;
 		onViewDetails?: (submission: BacklinkSubmission) => void;
 		onDelete?: (submission: BacklinkSubmission) => void;
@@ -33,40 +36,75 @@
 	});
 </script>
 
-<div class="space-y-4">
-	{#each Array.from(groupedByStatus().entries()) as [status, items]}
-		{#if items.length > 0}
+{#if loading}
+	<div class="space-y-4">
+		{#each Array(3) as _}
 			<Collapsible.Root open={true} class="group/collapsible">
 				<Collapsible.Trigger class="flex items-center justify-between w-full p-2 hover:bg-muted rounded-md">
-					<div class="flex items-center gap-2">
-						<span class="text-sm font-semibold">
-							{SUBMISSION_STATUSES[status].label} ({items.length})
-						</span>
-					</div>
+					<Skeleton class="h-5 w-32" />
 					<ChevronDownIcon
 						class="size-4 transition-transform group-data-[state=open]/collapsible:rotate-180"
 					/>
 				</Collapsible.Trigger>
 				<Collapsible.Content class="pt-2">
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-						{#each items as submission (submission.id)}
-							<SubmissionCard {submission} {onUpdateStatus} {onViewDetails} {onDelete} />
+						{#each Array(3) as _}
+							<div class="border rounded-lg p-4 space-y-3">
+								<Skeleton class="h-6 w-3/4" />
+								<div class="flex gap-2">
+									<Skeleton class="h-5 w-20" />
+									<Skeleton class="h-5 w-16" />
+								</div>
+								<Skeleton class="h-4 w-full" />
+								<Skeleton class="h-4 w-2/3" />
+								<div class="grid grid-cols-2 gap-2">
+									<Skeleton class="h-4 w-full" />
+									<Skeleton class="h-4 w-full" />
+								</div>
+								<Skeleton class="h-9 w-full mt-4" />
+							</div>
 						{/each}
 					</div>
 				</Collapsible.Content>
 			</Collapsible.Root>
-		{/if}
-	{/each}
+		{/each}
+	</div>
+{:else}
+	<div class="space-y-4">
+		{#each Array.from(groupedByStatus().entries()) as [status, items]}
+			{#if items.length > 0}
+				<Collapsible.Root open={true} class="group/collapsible">
+					<Collapsible.Trigger class="flex items-center justify-between w-full p-2 hover:bg-muted rounded-md">
+						<div class="flex items-center gap-2">
+							<span class="text-sm font-semibold">
+								{SUBMISSION_STATUSES[status].label} ({items.length})
+							</span>
+						</div>
+						<ChevronDownIcon
+							class="size-4 transition-transform group-data-[state=open]/collapsible:rotate-180"
+						/>
+					</Collapsible.Trigger>
+					<Collapsible.Content class="pt-2">
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+							{#each items as submission (submission.id)}
+								<SubmissionCard {submission} {onUpdateStatus} {onViewDetails} {onDelete} />
+							{/each}
+						</div>
+					</Collapsible.Content>
+				</Collapsible.Root>
+			{/if}
+		{/each}
 
-	{#if submissions.length === 0}
-		<Empty.Root>
-			<Empty.Header>
-				<Empty.Title>No submissions yet</Empty.Title>
-				<Empty.Description>
-					Start tracking backlink sites by adding them to your project.
-				</Empty.Description>
-			</Empty.Header>
-		</Empty.Root>
-	{/if}
-</div>
+		{#if submissions.length === 0}
+			<Empty.Root>
+				<Empty.Header>
+					<Empty.Title>No submissions yet</Empty.Title>
+					<Empty.Description>
+						Start tracking backlink sites by adding them to your project.
+					</Empty.Description>
+				</Empty.Header>
+			</Empty.Root>
+		{/if}
+	</div>
+{/if}
 

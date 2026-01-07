@@ -12,7 +12,8 @@
 
 	// Read from unified portal store
 	const workspace = $derived(portal.currentWorkspace);
-	const projects = $derived(portal.currentWorkspaceProjects);
+	// Use data.projects from server load which includes website_url and status
+	const projects = $derived(data.projects || []);
 	const hasProjects = $derived(projects.length > 0);
 </script>
 

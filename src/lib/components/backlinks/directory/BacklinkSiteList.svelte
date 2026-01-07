@@ -2,16 +2,13 @@
 	import type { BacklinkSiteWithSubmission, BacklinkSite } from '$lib/types';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import * as Empty from '$lib/components/ui/empty/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { LINK_TYPES, DIFFICULTY_LEVELS, getDRBadgeColor } from '$lib/types/backlinks';
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import ExternalLinkIcon from '@lucide/svelte/icons/external-link';
-	import MoreVerticalIcon from '@lucide/svelte/icons/more-vertical';
 	import EyeIcon from '@lucide/svelte/icons/eye';
 	import PlusIcon from '@lucide/svelte/icons/plus';
-	import TrashIcon from '@lucide/svelte/icons/trash-2';
 	import GlobeIcon from '@lucide/svelte/icons/globe';
 
 	let {
@@ -107,43 +104,30 @@
 				
 				</div>
 
-				<!-- Actions Dropdown -->
-				<div class="lg:absolute lg:top-3 lg:end-3 group-hover:opacity-100 lg:opacity-0 transition-opacity shrink-0">
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger>
-							<Button
-								variant="ghost"
-								size="icon"
-								class="size-8"
-								onclick={(e) => e.stopPropagation()}
-							>
-								<MoreVerticalIcon class="size-4" />
-								<span class="sr-only">More options</span>
-							</Button>
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content align="end">
-							<DropdownMenu.Item onclick={() => onViewDetails?.(site)}>
-								<EyeIcon class="size-4 mr-2" />
-								View Details
-							</DropdownMenu.Item>
-							{#if !site.has_submission}
-								<DropdownMenu.Item onclick={() => onAddToProject?.(site)}>
-									<PlusIcon class="size-4 mr-2" />
-									Add to Project
-								</DropdownMenu.Item>
-							{/if}
-							{#if site.url}
-								<DropdownMenu.Item
-									onclick={() => {
-										window.open(site.url, '_blank', 'noopener,noreferrer');
-									}}
-								>
-									<ExternalLinkIcon class="size-4 mr-2" />
-									Open Site
-								</DropdownMenu.Item>
-							{/if}
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
+				<!-- Actions -->
+				<div class="flex items-center gap-2 shrink-0">
+					<Button
+						variant="ghost"
+						onclick={(e) => {
+							e.stopPropagation();
+							onViewDetails?.(site);
+						}}
+					>
+						<EyeIcon class="size-4 mr-2" />
+						View Details
+					</Button>
+					{#if !site.has_submission}
+						<Button
+							variant="default"
+							size="sm"
+							onclick={(e) => {
+								e.stopPropagation();
+								onAddToProject?.(site);
+							}}
+						>
+							Add to Project
+						</Button>
+					{/if}
 				</div>
 			</div>
 		{/each}

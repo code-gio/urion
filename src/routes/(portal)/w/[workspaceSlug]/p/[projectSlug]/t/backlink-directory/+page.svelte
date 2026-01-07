@@ -1,16 +1,26 @@
 <script lang="ts">
 	import type { ProjectPageData } from '$lib/types';
-	import type { GetBacklinkSitesParams, BacklinkSiteWithSubmission, BacklinkSite } from '$lib/types';
+	import type {
+		BacklinkSubmissionWithSite,
+		BacklinkSubmission,
+		SubmissionStatus,
+		UpdateSubmissionRequest,
+	} from '$lib/types';
 	import { usePortal } from '$lib/stores/portal.svelte.js';
-	import { get } from '$lib/api/client.js';
-	import { invalidateAll } from '$app/navigation';
-	import BacklinkSiteList from '$lib/components/backlinks/directory/BacklinkSiteList.svelte';
-	import BacklinkFilters from '$lib/components/backlinks/directory/BacklinkFilters.svelte';
-	import BacklinkSearch from '$lib/components/backlinks/directory/BacklinkSearch.svelte';
-	import BacklinkSiteModal from '$lib/components/backlinks/directory/BacklinkSiteModal.svelte';
+	import { get, post, patch, del } from '$lib/api/client.js';
+	import { invalidateAll, beforeNavigate, afterNavigate } from '$app/navigation';
+	import SubmissionList from '$lib/components/backlinks/submissions/SubmissionList.svelte';
+	import SubmissionKanban from '$lib/components/backlinks/submissions/SubmissionKanban.svelte';
+	import SubmissionsStats from '$lib/components/backlinks/submissions/SubmissionsStats.svelte';
+	import UpdateStatusModal from '$lib/components/backlinks/submissions/UpdateStatusModal.svelte';
+	import SubmissionDetailsDialog from '$lib/components/backlinks/submissions/SubmissionDetailsDialog.svelte';
+	import BacklinksDirectoryDialog from '$lib/components/backlinks/backlinks-directory-dialog.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import * as Sheet from '$lib/components/ui/sheet/index.js';
-	import FilterIcon from '@lucide/svelte/icons/filter';
+	import * as Tabs from '$lib/components/ui/tabs/index.js';
+	import { toast } from 'svelte-sonner';
+	import ListIcon from '@lucide/svelte/icons/list';
+	import LayoutGridIcon from '@lucide/svelte/icons/layout-grid';
+	import PlusIcon from '@lucide/svelte/icons/plus';
 
 	let { data }: { data: ProjectPageData } = $props();
 
@@ -18,21 +28,21 @@
 	const project = $derived(portal.currentProject);
 	const workspace = $derived(portal.currentWorkspace);
 
-	let sites = $state<BacklinkSiteWithSubmission[]>([]);
-	let loading = $state(true);
+	let submissions = $state<BacklinkSubmissionWithSite[]>([]);
+	let stats = $state(null);
+	let loading = $state(false);
+	let initialLoad = $state(true);
 	let error = $state<string | null>(null);
-	let total = $state(0);
-	let limit = $state(25);
-	let offset = $state(0);
+	let statusFilter = $state<SubmissionStatus | undefined>(undefined);
+	let viewMode = $state<'list' | 'kanban'>('list');
+	let selectedSubmission = $state<BacklinkSubmission | null>(null);
+	let updateModalOpen = $state(false);
+	let directoryDialogOpen = $state(false);
+	let detailsDialogOpen = $state(false);
+	let selectedSubmissionId = $state<string | null>(null);
+	let navigating = $state(false);
 
-	let filters = $state<GetBacklinkSitesParams>({});
-	let search = $state('');
-	let selectedSite = $state<BacklinkSite | null>(null);
-	let selectedSubmission = $state(null);
-	let modalOpen = $state(false);
-	let filtersOpen = $state(false);
-
-	async function loadSites() {
+	async function loadSubmissions() {
 		if (!workspace || !project) return;
 
 		loading = true;
@@ -40,106 +50,119 @@
 
 		try {
 			const params = new URLSearchParams();
-			Object.entries({ ...filters, search, limit, offset }).forEach(([key, value]) => {
-				if (value !== undefined && value !== null && value !== '') {
-					if (Array.isArray(value)) {
-						params.append(key, value.join(','));
-					} else {
-						params.append(key, String(value));
-					}
-				}
-			});
+			if (statusFilter) {
+				params.append('status', statusFilter);
+			}
 
 			const response = await get<{
-				sites: BacklinkSiteWithSubmission[];
+				submissions: BacklinkSubmissionWithSite[];
 				total: number;
-				limit: number;
-				offset: number;
-			}>(`/api/workspaces/${workspace.id}/projects/${project.id}/t/backlinks?${params.toString()}`);
+				stats: any;
+			}>(`/api/workspaces/${workspace.id}/projects/${project.id}/t/backlinks/submissions?${params.toString()}`);
 
-			sites = response.sites;
-			total = response.total;
+			submissions = response.submissions;
+			stats = response.stats;
+			initialLoad = false;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to load backlink sites';
-			console.error('Error loading sites:', err);
+			error = err instanceof Error ? err.message : 'Failed to load submissions';
+			console.error('Error loading submissions:', err);
 		} finally {
 			loading = false;
 		}
 	}
 
-	async function handleViewDetails(site: BacklinkSite) {
-		if (!workspace || !project) return;
+	async function handleUpdateStatus(
+		submission: BacklinkSubmission,
+		status: SubmissionStatus
+	) {
+		selectedSubmission = submission;
+		updateModalOpen = true;
+	}
+
+	async function handleUpdateSubmission(data: UpdateSubmissionRequest) {
+		if (!workspace || !project || !selectedSubmission) return;
 
 		try {
-			const response = await get<{ site: BacklinkSite; submission: any }>(
-				`/api/workspaces/${workspace.id}/projects/${project.id}/t/backlinks/s/${site.id}`
+			await patch(
+				`/api/workspaces/${workspace.id}/projects/${project.id}/t/backlinks/submissions/${selectedSubmission.id}`,
+				data
 			);
-			selectedSite = response.site;
-			selectedSubmission = response.submission;
-			modalOpen = true;
+			toast.success('Submission updated successfully');
+			updateModalOpen = false;
+			selectedSubmission = null;
+			await invalidateAll();
+			await loadSubmissions();
 		} catch (err) {
-			console.error('Error loading site details:', err);
+			toast.error(err instanceof Error ? err.message : 'Failed to update submission');
+			console.error('Error updating submission:', err);
 		}
 	}
 
-	async function handleAddToProject(site: BacklinkSite) {
+	async function handleDelete(submission: BacklinkSubmission) {
 		if (!workspace || !project) return;
 
+		if (!confirm('Are you sure you want to delete this submission?')) {
+			return;
+		}
+
 		try {
-			const { post } = await import('$lib/api/client.js');
-			await post(`/api/workspaces/${workspace.id}/projects/${project.id}/t/backlinks/submissions`, {
-				backlink_site_id: site.id,
-			});
+			await del(
+				`/api/workspaces/${workspace.id}/projects/${project.id}/t/backlinks/submissions/${submission.id}`
+			);
+			toast.success('Submission deleted successfully');
 			await invalidateAll();
-			await loadSites();
-			modalOpen = false;
+			await loadSubmissions();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to add site to project';
-			console.error('Error adding site:', err);
+			toast.error(err instanceof Error ? err.message : 'Failed to delete submission');
+			console.error('Error deleting submission:', err);
 		}
 	}
 
-	function handleSearchChange(value: string) {
-		search = value;
-		offset = 0;
-		loadSites();
+	function handleViewDetails(submission: BacklinkSubmission) {
+		selectedSubmissionId = submission.id;
+		detailsDialogOpen = true;
 	}
 
-	function handleFiltersChange(newFilters: GetBacklinkSitesParams) {
-		filters = newFilters;
-		offset = 0;
-		loadSites();
+	function handleDetailsDialogClose() {
+		detailsDialogOpen = false;
+		selectedSubmissionId = null;
 	}
 
-	function handleFiltersReset() {
-		filters = {};
-		search = '';
-		offset = 0;
-		loadSites();
+	function handleDetailsUpdate() {
+		loadSubmissions();
+	}
+
+	function handleDetailsDelete() {
+		loadSubmissions();
 	}
 
 	$effect(() => {
 		if (workspace && project) {
-			loadSites();
+			loadSubmissions();
 		}
+	});
+
+	beforeNavigate(() => {
+		navigating = true;
+	});
+
+	afterNavigate(() => {
+		navigating = false;
 	});
 </script>
 
-<div class="container ">
-	<div class="mb-6">
-		<div class="flex items-center justify-between mb-4">
-			<div>
-				<h1 class="text-3xl font-bold mb-2">Backlink Directory</h1>
-				<p class="text-muted-foreground">
-					Browse and add backlink opportunities for {project?.name || 'this project'}
-				</p>
-			</div>
-			<a href="/w/{workspace?.slug}/p/{project?.slug}/t/backlink-directory/submissions">
-				<Button variant="outline">
-					My Submissions
-				</Button>
-			</a>
+<div class="container mx-auto py-8 px-4">
+	<div class="mb-8 flex items-center justify-between">
+		<div>
+			<h1 class="text-3xl font-bold mb-2">My Submissions</h1>
+			<p class="text-muted-foreground">
+				Track and manage your backlink submissions for {project?.name || 'this project'}
+			</p>
 		</div>
+		<Button onclick={() => (directoryDialogOpen = true)}>
+			<PlusIcon class="size-4 mr-2" />
+			Add Site
+		</Button>
 	</div>
 
 	{#if error}
@@ -148,76 +171,130 @@
 		</div>
 	{/if}
 
-	<div class="flex gap-4">
-		<!-- Filters Sidebar (Desktop) -->
-		<aside class="hidden lg:block w-64 shrink-0">
-			<div class="sticky top-4 space-y-4">
-				<BacklinkSearch value={search} onChange={handleSearchChange} />
-				<BacklinkFilters {filters} onChange={handleFiltersChange} onReset={handleFiltersReset} />
-			</div>
-		</aside>
+	{#if stats}
+		<div class="mb-6">
+			<SubmissionsStats {stats} />
+		</div>
+	{/if}
 
-		<!-- Main Content -->
-		<div class="flex-1 space-y-4">
-			<!-- Mobile Search and Filter Button -->
-			<div class="lg:hidden flex gap-2 items-center">
-				<BacklinkSearch value={search} onChange={handleSearchChange} class="flex-1" />
-				<Sheet.Root bind:open={filtersOpen}>
-					<Sheet.Trigger>
-						<Button variant="outline" size="icon">
-							<FilterIcon class="size-4" />
-						</Button>
-					</Sheet.Trigger>
-					<Sheet.Content side="left" class="w-80">
-						<Sheet.Header>
-							<Sheet.Title>Filters</Sheet.Title>
-						</Sheet.Header>
-						<div class="mt-4 space-y-4">
-							<BacklinkFilters {filters} onChange={handleFiltersChange} onReset={handleFiltersReset} />
-						</div>
-					</Sheet.Content>
-				</Sheet.Root>
-			</div>
-
-			<div class="text-sm text-muted-foreground">
-				Showing {sites.length} of {total} sites
-			</div>
-
-			<BacklinkSiteList
-				{sites}
-				{loading}
-				onViewDetails={handleViewDetails}
-				onAddToProject={handleAddToProject}
-			/>
-
-			{#if !loading && sites.length > 0 && offset + limit < total}
-				<div class="flex justify-center">
-					<Button
-						variant="outline"
+	<div class="space-y-4">
+		<div class="flex items-center justify-between">
+			<Tabs.Root value={statusFilter || 'all'} class="w-full">
+				<Tabs.List>
+					<Tabs.Trigger
+						value="all"
 						onclick={() => {
-							offset += limit;
-							loadSites();
+							statusFilter = undefined;
+							loadSubmissions();
 						}}
 					>
-						Load More
-					</Button>
-				</div>
-			{/if}
+						All
+					</Tabs.Trigger>
+					<Tabs.Trigger
+						value="not_started"
+						onclick={() => {
+							statusFilter = 'not_started';
+							loadSubmissions();
+						}}
+					>
+						Not Started
+					</Tabs.Trigger>
+					<Tabs.Trigger
+						value="in_progress"
+						onclick={() => {
+							statusFilter = 'in_progress';
+							loadSubmissions();
+						}}
+					>
+						In Progress
+					</Tabs.Trigger>
+					<Tabs.Trigger
+						value="submitted"
+						onclick={() => {
+							statusFilter = 'submitted';
+							loadSubmissions();
+						}}
+					>
+						Submitted
+					</Tabs.Trigger>
+					<Tabs.Trigger
+						value="approved"
+						onclick={() => {
+							statusFilter = 'approved';
+							loadSubmissions();
+						}}
+					>
+						Approved
+					</Tabs.Trigger>
+					<Tabs.Trigger
+						value="rejected"
+						onclick={() => {
+							statusFilter = 'rejected';
+							loadSubmissions();
+						}}
+					>
+						Rejected
+					</Tabs.Trigger>
+				</Tabs.List>
+			</Tabs.Root>
+
+			<div class="flex gap-2">
+				<Button
+					variant={viewMode === 'list' ? 'default' : 'outline'}
+					size="sm"
+					onclick={() => (viewMode = 'list')}
+				>
+					<ListIcon class="size-4" />
+				</Button>
+				<Button
+					variant={viewMode === 'kanban' ? 'default' : 'outline'}
+					size="sm"
+					onclick={() => (viewMode = 'kanban')}
+				>
+					<LayoutGridIcon class="size-4" />
+				</Button>
+			</div>
 		</div>
+
+		{#if viewMode === 'list'}
+			<SubmissionList
+				{submissions}
+				loading={loading && initialLoad}
+				onUpdateStatus={handleUpdateStatus}
+				onViewDetails={handleViewDetails}
+				onDelete={handleDelete}
+			/>
+		{:else}
+			<SubmissionKanban
+				{submissions}
+				loading={loading && initialLoad}
+				onUpdateStatus={handleUpdateStatus}
+				onViewDetails={handleViewDetails}
+			/>
+		{/if}
 	</div>
 </div>
 
-{#if selectedSite}
-	<BacklinkSiteModal
-		site={selectedSite}
+{#if selectedSubmission}
+	<UpdateStatusModal
 		submission={selectedSubmission}
-		open={modalOpen}
+		open={updateModalOpen}
 		onClose={() => {
-			modalOpen = false;
-			selectedSite = null;
+			updateModalOpen = false;
 			selectedSubmission = null;
 		}}
-		onAddToProject={handleAddToProject}
+		onConfirm={handleUpdateSubmission}
 	/>
 {/if}
+
+<BacklinksDirectoryDialog bind:open={directoryDialogOpen} />
+
+<SubmissionDetailsDialog
+	submissionId={selectedSubmissionId}
+	bind:open={detailsDialogOpen}
+	onClose={handleDetailsDialogClose}
+	onUpdate={handleDetailsUpdate}
+	onDelete={handleDetailsDelete}
+/>
+
 
