@@ -2,7 +2,6 @@
 	import type { BacklinkSubmissionWithSite, BacklinkSubmission, UpdateSubmissionRequest } from '$lib/types';
 	import { usePortal } from '$lib/stores/portal.svelte.js';
 	import { get, patch, del } from '$lib/api/client.js';
-	import { invalidateAll } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button';
@@ -81,7 +80,6 @@
 			}
 			toast.success('Submission updated successfully');
 			updateModalOpen = false;
-			await invalidateAll();
 			onUpdate?.();
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to update submission');
@@ -108,7 +106,6 @@
 				`/api/workspaces/${workspace.id}/projects/${project.id}/t/backlinks/submissions/${submission.id}`
 			);
 			toast.success('Submission deleted successfully');
-			await invalidateAll();
 			deleteDialogOpen = false;
 			open = false;
 			onDelete?.();

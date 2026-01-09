@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { BacklinkSite, BacklinkSubmission } from '$lib/types';
+	import type { BacklinkSite, BacklinkSubmission, BacklinkSiteWithSubmission } from '$lib/types';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -18,15 +18,17 @@
 	let {
 		site,
 		submission,
-		open = false,
+		open = $bindable(false),
+		addingToProject = false,
 		onClose,
 		onAddToProject,
 	}: {
-		site: BacklinkSite | null;
-		submission: BacklinkSubmission | null;
+		site: BacklinkSiteWithSubmission | null;
+		submission: any;
 		open?: boolean;
+		addingToProject?: boolean;
 		onClose: () => void;
-		onAddToProject?: (site: BacklinkSite) => void;
+		onAddToProject?: (site: BacklinkSiteWithSubmission) => void;
 	} = $props();
 
 	const drColor = $derived(site ? getDRBadgeColor(site.dr) : 'gray');
@@ -37,7 +39,7 @@
 	);
 	const costTypeInfo = $derived(site && site.cost_type ? COST_TYPES[site.cost_type] : null);
 	const categoryInfo = $derived(
-		site ? BACKLINK_CATEGORIES[site.category] || BACKLINK_CATEGORIES.other : null
+		site ? BACKLINK_CATEGORIES[site.primary_category] || BACKLINK_CATEGORIES.other : null
 	);
 </script>
 
@@ -192,16 +194,20 @@
 
 		<Dialog.Footer>
 			{#if site?.submission_url}
-				<Button variant="outline" onclick={() => window.open(site.submission_url, '_blank')}>
+				<Button variant="outline" onclick={() => site.submission_url && window.open(site.submission_url, '_blank')}>
 					<ExternalLinkIcon class="size-4 mr-2" />
 					View Submission URL
 				</Button>
 			{/if}
-			<Button variant="outline" onclick={onClose}>Close</Button>
+			<Button variant="outline" onclick={onClose} disabled={addingToProject}>Close</Button>
 			{#if !submission && onAddToProject}
-				<Button onclick={() => onAddToProject(site!)}>
+				<Button onclick={() => onAddToProject(site!)} disabled={addingToProject}>
 					<CheckIcon class="size-4 mr-2" />
-					Add to Project
+					{#if addingToProject}
+						Adding...
+					{:else}
+						Add to Project
+					{/if}
 				</Button>
 			{/if}
 		</Dialog.Footer>

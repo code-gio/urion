@@ -21,7 +21,7 @@
 		onDelete?: (submission: BacklinkSubmission) => void;
 	} = $props();
 
-	const groupedByStatus = $derived(() => {
+	const groupedByStatus = $derived.by(() => {
 		const groups = new Map<SubmissionStatus, BacklinkSubmissionWithSite[]>();
 		Object.keys(SUBMISSION_STATUSES).forEach((status) => {
 			groups.set(status as SubmissionStatus, []);
@@ -71,7 +71,7 @@
 	</div>
 {:else}
 	<div class="space-y-4">
-		{#each Array.from(groupedByStatus().entries()) as [status, items]}
+		{#each Array.from(groupedByStatus.entries()) as [status, items]}
 			{#if items.length > 0}
 				<Collapsible.Root open={true} class="group/collapsible">
 					<Collapsible.Trigger class="flex items-center justify-between w-full p-2 hover:bg-muted rounded-md">

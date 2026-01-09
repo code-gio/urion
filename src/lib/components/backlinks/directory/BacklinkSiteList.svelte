@@ -14,11 +14,13 @@
 	let {
 		sites,
 		loading = false,
+		addingToProject = false,
 		onViewDetails,
 		onAddToProject,
 	}: {
 		sites: BacklinkSiteWithSubmission[];
 		loading?: boolean;
+		addingToProject?: boolean;
 		onViewDetails?: (site: BacklinkSiteWithSubmission) => void;
 		onAddToProject?: (site: BacklinkSiteWithSubmission) => void;
 	} = $props();
@@ -120,12 +122,17 @@
 						<Button
 							variant="default"
 							size="sm"
+							disabled={addingToProject}
 							onclick={(e) => {
 								e.stopPropagation();
 								onAddToProject?.(site);
 							}}
 						>
-							Add to Project
+							{#if addingToProject}
+								Adding...
+							{:else}
+								Add to Project
+							{/if}
 						</Button>
 					{/if}
 				</div>

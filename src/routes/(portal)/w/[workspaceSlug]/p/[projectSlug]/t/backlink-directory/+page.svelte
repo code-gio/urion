@@ -8,7 +8,8 @@
 	} from '$lib/types';
 	import { usePortal } from '$lib/stores/portal.svelte.js';
 	import { get, post, patch, del } from '$lib/api/client.js';
-	import { invalidateAll, beforeNavigate, afterNavigate } from '$app/navigation';
+	import { invalidateCachePattern } from '$lib/api/cache.js';
+	import { invalidateAll } from '$app/navigation';
 	import SubmissionList from '$lib/components/backlinks/submissions/SubmissionList.svelte';
 	import SubmissionKanban from '$lib/components/backlinks/submissions/SubmissionKanban.svelte';
 	import SubmissionsStats from '$lib/components/backlinks/submissions/SubmissionsStats.svelte';
@@ -40,7 +41,6 @@
 	let directoryDialogOpen = $state(false);
 	let detailsDialogOpen = $state(false);
 	let selectedSubmissionId = $state<string | null>(null);
-	let navigating = $state(false);
 
 	async function loadSubmissions() {
 		if (!workspace || !project) return;
@@ -53,6 +53,8 @@
 			if (statusFilter) {
 				params.append('status', statusFilter);
 			}
+			// Add timestamp to bypass cache
+			params.append('_t', Date.now().toString());
 
 			const response = await get<{
 				submissions: BacklinkSubmissionWithSite[];
@@ -90,7 +92,6 @@
 			toast.success('Submission updated successfully');
 			updateModalOpen = false;
 			selectedSubmission = null;
-			await invalidateAll();
 			await loadSubmissions();
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to update submission');
@@ -109,8 +110,9 @@
 			await del(
 				`/api/workspaces/${workspace.id}/projects/${project.id}/t/backlinks/submissions/${submission.id}`
 			);
+			// Invalidate cache for this endpoint
+			invalidateCachePattern(`/api/workspaces/${workspace.id}/projects/${project.id}/t/backlinks/submissions`);
 			toast.success('Submission deleted successfully');
-			await invalidateAll();
 			await loadSubmissions();
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to delete submission');
@@ -133,21 +135,27 @@
 	}
 
 	function handleDetailsDelete() {
+		if (workspace && project) {
+			invalidateCachePattern(`/api/workspaces/${workspace.id}/projects/${project.id}/t/backlinks/submissions`);
+		}
 		loadSubmissions();
 	}
 
-	$effect(() => {
+	function handleSubmissionAdded() {
 		if (workspace && project) {
+			invalidateCachePattern(`/api/workspaces/${workspace.id}/projects/${project.id}/t/backlinks/submissions`);
+		}
+		loadSubmissions();
+	}
+
+	// Load once on mount
+	$effect(() => {
+		const workspaceId = workspace?.id;
+		const projectId = project?.id;
+		
+		if (workspaceId && projectId && initialLoad) {
 			loadSubmissions();
 		}
-	});
-
-	beforeNavigate(() => {
-		navigating = true;
-	});
-
-	afterNavigate(() => {
-		navigating = false;
 	});
 </script>
 
@@ -287,7 +295,7 @@
 	/>
 {/if}
 
-<BacklinksDirectoryDialog bind:open={directoryDialogOpen} />
+<BacklinksDirectoryDialog bind:open={directoryDialogOpen} onSubmissionAdded={handleSubmissionAdded} />
 
 <SubmissionDetailsDialog
 	submissionId={selectedSubmissionId}

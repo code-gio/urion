@@ -20,14 +20,7 @@ export const POST: RequestHandler = async ({
     const projectId = formData.get("projectId") as string;
     const parentId = (formData.get("parentId") as string) || null;
 
-    console.log("Upload request:", {
-      fileName: file?.name,
-      fileSize: file?.size,
-      fileType: file?.type,
-      workspaceId,
-      projectId,
-      parentId,
-    });
+
 
     if (!file) {
       throw error(400, "No file provided");
@@ -72,8 +65,6 @@ export const POST: RequestHandler = async ({
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const storagePath = `${workspaceId}/${projectId}/${timestamp}_${randomString}_${sanitizedName}`;
 
-    console.log("Uploading to storage path:", storagePath);
-
     // Upload file to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("media")
@@ -90,15 +81,12 @@ export const POST: RequestHandler = async ({
       );
     }
 
-    console.log("Storage upload successful:", uploadData);
-
     // Get public URL for the uploaded file
     const { data: urlData } = supabase.storage
       .from("media")
       .getPublicUrl(storagePath);
 
     const publicUrl = urlData.publicUrl;
-    console.log("Generated public URL:", publicUrl);
 
     // Get file type from mime type
     const fileType = getFileTypeFromMime(file.type);
@@ -121,8 +109,6 @@ export const POST: RequestHandler = async ({
       created_by: user.id,
     };
 
-    console.log("Creating media record:", mediaData);
-
     const { data: mediaRecord, error: dbError } = await supabase
       .from("media")
       .insert(mediaData)
@@ -135,8 +121,6 @@ export const POST: RequestHandler = async ({
       await supabase.storage.from("media").remove([storagePath]);
       throw error(500, `Failed to create media record: ${dbError.message}`);
     }
-
-    console.log("Media record created:", mediaRecord);
 
     return json({
       success: true,

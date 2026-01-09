@@ -32,52 +32,61 @@ export const GET: RequestHandler = async (event) => {
 
 	// Get all submissions with site data
 	const { data: submissions, error: submissionsError } = await supabase
-		.from('project_backlink_submissions')
-		.select(
-			`
+    .from("project_backlink_submissions")
+    .select(
+      `
       *,
       backlink_sites (
         id,
-        category,
+        primary_category,
         link_type,
         dr
       )
     `
-		)
-		.eq('project_id', projectId);
+    )
+    .eq("project_id", projectId);
 
-	if (submissionsError) {
-		throw error(500, submissionsError.message);
-	}
+  if (submissionsError) {
+    throw error(500, submissionsError.message);
+  }
 
-	const submissionsData = submissions || [];
+  const submissionsData = submissions || [];
 
-	// Calculate overview stats
-	const overview = {
-		total_submissions: submissionsData.length,
-		not_started: submissionsData.filter((s) => s.status === 'not_started').length,
-		in_progress: submissionsData.filter((s) => s.status === 'in_progress').length,
-		submitted: submissionsData.filter((s) => s.status === 'submitted').length,
-		approved: submissionsData.filter((s) => s.status === 'approved').length,
-		rejected: submissionsData.filter((s) => s.status === 'rejected').length,
-		expired: submissionsData.filter((s) => s.status === 'expired').length,
-		live_backlinks: submissionsData.filter((s) => s.is_live === true).length,
-		success_rate: calculateSuccessRate(
-			submissionsData.filter((s) => s.status === 'approved').length,
-			submissionsData.filter((s) => s.status === 'rejected').length
-		),
-	};
+  // Calculate overview stats
+  const overview = {
+    total_submissions: submissionsData.length,
+    not_started: submissionsData.filter((s) => s.status === "not_started")
+      .length,
+    in_progress: submissionsData.filter((s) => s.status === "in_progress")
+      .length,
+    submitted: submissionsData.filter((s) => s.status === "submitted").length,
+    approved: submissionsData.filter((s) => s.status === "approved").length,
+    rejected: submissionsData.filter((s) => s.status === "rejected").length,
+    expired: submissionsData.filter((s) => s.status === "expired").length,
+    live_backlinks: submissionsData.filter((s) => s.is_live === true).length,
+    success_rate: calculateSuccessRate(
+      submissionsData.filter((s) => s.status === "approved").length,
+      submissionsData.filter((s) => s.status === "rejected").length
+    ),
+  };
 
-	// Calculate by category
-	const categoryMap = new Map<string, { count: number; approved: number; rejected: number }>();
-	submissionsData.forEach((submission: any) => {
-		const category = submission.backlink_sites?.category || 'other';
-		const current = categoryMap.get(category) || { count: 0, approved: 0, rejected: 0 };
-		current.count++;
-		if (submission.status === 'approved') current.approved++;
-		if (submission.status === 'rejected') current.rejected++;
-		categoryMap.set(category, current);
-	});
+  // Calculate by category
+  const categoryMap = new Map<
+    string,
+    { count: number; approved: number; rejected: number }
+  >();
+  submissionsData.forEach((submission: any) => {
+    const category = submission.backlink_sites?.primary_category || "other";
+    const current = categoryMap.get(category) || {
+      count: 0,
+      approved: 0,
+      rejected: 0,
+    };
+    current.count++;
+    if (submission.status === "approved") current.approved++;
+    if (submission.status === "rejected") current.rejected++;
+    categoryMap.set(category, current);
+  });
 
 	const by_category = Array.from(categoryMap.entries()).map(([category, stats]) => ({
 		category: category as any,

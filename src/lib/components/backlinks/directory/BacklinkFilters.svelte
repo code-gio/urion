@@ -32,7 +32,7 @@
   let maxDr = $state(100);
   let categoryValue = $state("");
   let linkTypes = $state<string[]>([]);
-  let costTypes = $state<string[]>([]);
+  let costs = $state<string[]>([]);
   let difficulties = $state<string[]>([]);
 
   // Sync values when filters change (only from parent, not from local changes)
@@ -51,10 +51,10 @@
       : filters.link_type
         ? [filters.link_type]
         : [];
-    costTypes = Array.isArray(filters.cost_type)
-      ? filters.cost_type
-      : filters.cost_type
-        ? [filters.cost_type]
+    costs = Array.isArray(filters.cost)
+      ? filters.cost
+      : filters.cost
+        ? [filters.cost]
         : [];
     difficulties = Array.isArray(filters.difficulty)
       ? filters.difficulty
@@ -89,15 +89,15 @@
   );
 
   function toggleArrayFilter(
-    key: "link_type" | "cost_type" | "difficulty",
+    key: "link_type" | "cost" | "difficulty",
     value: string,
     checked: boolean
   ) {
     const currentArray =
       key === "link_type"
         ? linkTypes
-        : key === "cost_type"
-          ? costTypes
+        : key === "cost"
+          ? costs
           : difficulties;
     const newArray = checked
       ? [...currentArray, value]
@@ -113,8 +113,8 @@
             : newArray
           : undefined
       );
-    } else if (key === "cost_type") {
-      costTypes = newArray;
+    } else if (key === "cost") {
+      costs = newArray;
       updateFilter(
         key,
         newArray.length > 0
@@ -142,14 +142,14 @@
       (Array.isArray(filters.link_type)
         ? filters.link_type.length > 0
         : filters.link_type) ||
-      (Array.isArray(filters.cost_type)
-        ? filters.cost_type.length > 0
-        : filters.cost_type) ||
+      (Array.isArray(filters.cost)
+        ? filters.cost.length > 0
+        : filters.cost) ||
       (Array.isArray(filters.difficulty)
         ? filters.difficulty.length > 0
         : filters.difficulty) ||
-      filters.min_dr ||
-      filters.max_dr
+      (filters.min_dr && filters.min_dr > 0) ||
+      (filters.max_dr && filters.max_dr < 100)
     );
   }
 </script>
@@ -221,33 +221,33 @@
       </div>
     </div>
 
-    <!-- Cost Type (Checkboxes) -->
+    <!-- Cost (Checkboxes) -->
     <div class="space-y-2">
       <Label class="text-xs font-medium">Cost</Label>
       <div class="space-y-2">
         {#each Object.entries(COST_TYPES) as [key, { label }]}
           <div class="flex items-center space-x-2">
             <Checkbox
-              id={`cost-type-${key}`}
-              checked={costTypes.includes(key)}
+              id={`cost-${key}`}
+              checked={costs.includes(key)}
               onCheckedChange={(checked) => {
                 if (checked) {
-                  costTypes = [...costTypes, key];
+                  costs = [...costs, key];
                 } else {
-                  costTypes = costTypes.filter((v) => v !== key);
+                  costs = costs.filter((v) => v !== key);
                 }
                 updateFilter(
-                  "cost_type",
-                  costTypes.length > 0
-                    ? costTypes.length === 1
-                      ? costTypes[0]
-                      : costTypes
+                  "cost",
+                  costs.length > 0
+                    ? costs.length === 1
+                      ? costs[0]
+                      : costs
                     : undefined
                 );
               }}
             />
             <Label
-              for={`cost-type-${key}`}
+              for={`cost-${key}`}
               class="text-xs font-normal cursor-pointer"
             >
               {label}
@@ -304,8 +304,9 @@
           max="100"
           bind:value={minDr}
           oninput={(e) => {
-            minDr = parseInt((e.target as HTMLInputElement).value) || 0;
-            updateFilter("min_dr", minDr);
+            const val = parseInt((e.target as HTMLInputElement).value);
+            minDr = isNaN(val) ? 0 : Math.max(0, Math.min(100, val));
+            updateFilter("min_dr", minDr > 0 ? minDr : undefined);
           }}
           class="h-9 w-20 rounded-md border border-input bg-background px-2 text-xs"
           placeholder="Min"
@@ -317,8 +318,9 @@
           max="100"
           bind:value={maxDr}
           oninput={(e) => {
-            maxDr = parseInt((e.target as HTMLInputElement).value) || 100;
-            updateFilter("max_dr", maxDr);
+            const val = parseInt((e.target as HTMLInputElement).value);
+            maxDr = isNaN(val) ? 100 : Math.max(0, Math.min(100, val));
+            updateFilter("max_dr", maxDr < 100 ? maxDr : undefined);
           }}
           class="h-9 w-20 rounded-md border border-input bg-background px-2 text-xs"
           placeholder="Max"
