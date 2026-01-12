@@ -22,3 +22,5 @@ export * from './nav.js';
 // Backlinks types
 export * from './backlinks.js';
 
+// Project settings types
+export * from './project-settings.js';
