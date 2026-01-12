@@ -14,11 +14,15 @@
 
 	const workspace = $derived(data.workspace);
 	const project = $derived(data.project);
+	const projectSettings = $derived(data.projectSettings);
 	const canEdit = $derived(data.canEdit);
 
 	let projectName = $state(project?.name || '');
 	let websiteUrl = $state(project?.website_url || '');
 	let projectStatus = $state<ProjectStatus>(project?.status || 'active');
+	let industry = $state(projectSettings?.industry || '');
+	let primaryLanguage = $state(projectSettings?.primary_language || '');
+	let targetCountries = $state(projectSettings?.target_countries?.join(', ') || '');
 	let isSaving = $state(false);
 	let isDirty = $state(false);
 
@@ -30,17 +34,29 @@
 			projectName = project.name || '';
 			websiteUrl = project.website_url || '';
 			projectStatus = project.status || 'active';
-			isDirty = false;
 		}
+		if (projectSettings) {
+			industry = projectSettings.industry || '';
+			primaryLanguage = projectSettings.primary_language || '';
+			targetCountries = projectSettings.target_countries?.join(', ') || '';
+		}
+		isDirty = false;
 	});
 
 	// Check if dirty
 	$effect(() => {
 		if (project) {
-			isDirty =
+			const projectDirty =
 				projectName !== (project.name || '') ||
 				websiteUrl !== (project.website_url || '') ||
 				projectStatus !== project.status;
+
+			const settingsDirty =
+				industry !== (projectSettings?.industry || '') ||
+				primaryLanguage !== (projectSettings?.primary_language || '') ||
+				targetCountries !== (projectSettings?.target_countries?.join(', ') || '');
+
+			isDirty = projectDirty || settingsDirty;
 		}
 	});
 
@@ -50,7 +66,8 @@
 		isSaving = true;
 
 		try {
-			const response = await fetch(`/api/workspaces/${workspace.id}/projects/${project.id}`, {
+			// Update project basic info
+			const projectResponse = await fetch(`/api/workspaces/${workspace.id}/projects/${project.id}`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
@@ -62,27 +79,55 @@
 				})
 			});
 
-			if (!response.ok) {
-				const error = await response.json();
+			if (!projectResponse.ok) {
+				const error = await projectResponse.json();
 				throw new Error(error.error || 'Failed to update project');
 			}
 
-			toast.success('Project settings updated successfully');
-			goto('.', { invalidateAll: true });
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to update project');
-		} finally {
-			isSaving = false;
-		}
+			// Update project settings
+			const countriesArray = targetCountries
+				.split(',')
+				.map((c) => c.trim())
+				.filter((c) => c.length > 0);
+
+			const settingsResponse = await fetch(`/api/workspaces/${workspace.id}/projects/${project.id}/settings`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					industry: industry.trim() || null,
+					primary_language: primaryLanguage.trim() || null,
+					target_countries: countriesArray
+				})
+			});
+
+			if (!settingsResponse.ok) {
+				const error = await settingsResponse.json();
+				throw new Error(error.error || 'Failed to update project settings');
+			}
+
+		toast.success('Project settings updated successfully');
+		isDirty = false;
+	} catch (error) {
+		toast.error(error instanceof Error ? error.message : 'Failed to update project');
+	} finally {
+		isSaving = false;
 	}
+}
 
 	function resetForm() {
 		if (project) {
 			projectName = project.name || '';
 			websiteUrl = project.website_url || '';
 			projectStatus = project.status || 'active';
-			isDirty = false;
 		}
+		if (projectSettings) {
+			industry = projectSettings.industry || '';
+			primaryLanguage = projectSettings.primary_language || '';
+			targetCountries = projectSettings.target_countries?.join(', ') || '';
+		}
+		isDirty = false;
 	}
 
 	// Register save and cancel handlers with parent SettingsShell
@@ -95,14 +140,17 @@
 		}) => void;
 	}>('settings-shell');
 
-	if (canEdit && settingsShell) {
-		settingsShell.setActions({
-			onSave: saveSettings,
-			onCancel: resetForm,
-			isDirty,
-			isSaving
-		});
-	}
+	// Update context reactively when isDirty or isSaving changes
+	$effect(() => {
+		if (canEdit && settingsShell) {
+			settingsShell.setActions({
+				onSave: saveSettings,
+				onCancel: resetForm,
+				isDirty,
+				isSaving
+			});
+		}
+	});
 </script>
 
 <div class="max-w-3xl space-y-6">
@@ -155,6 +203,44 @@
 								<Select.Item value="archived" label="Archived">Archived</Select.Item>
 							</Select.Content>
 						</Select.Root>
+					</div>
+				</div>
+			</FormSection>
+
+			<FormSection
+				title="Project Metadata"
+				description="Industry, language, and target markets for your project"
+			>
+				<div class="space-y-4">
+					<div class="space-y-2">
+						<Label for="industry">Industry</Label>
+						<Input
+							id="industry"
+							bind:value={industry}
+							placeholder="e.g., SaaS, E-commerce, Healthcare"
+							disabled={isSaving || !canEdit}
+						/>
+					</div>
+
+					<div class="space-y-2">
+						<Label for="primary-language">Primary Language</Label>
+						<Input
+							id="primary-language"
+							bind:value={primaryLanguage}
+							placeholder="e.g., en-US, es-ES"
+							disabled={isSaving || !canEdit}
+						/>
+					</div>
+
+					<div class="space-y-2">
+						<Label for="target-countries">Target Countries</Label>
+						<Input
+							id="target-countries"
+							bind:value={targetCountries}
+							placeholder="e.g., US, MX, ES (comma-separated)"
+							disabled={isSaving || !canEdit}
+						/>
+						<p class="text-xs text-muted-foreground">Separate multiple countries with commas</p>
 					</div>
 				</div>
 			</FormSection>

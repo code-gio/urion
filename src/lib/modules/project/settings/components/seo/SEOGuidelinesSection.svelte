@@ -5,6 +5,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { MultiValueInput } from '../index.js';
 	import type { SeoSettings } from '$lib/types/project-settings.js';
+	import { untrack } from 'svelte';
 
 	let {
 		settings = $bindable({} as SeoSettings),
@@ -20,22 +21,39 @@
 	let internalLinkingGuidelines = $state(settings?.internal_linking_guidelines || '');
 	let noindexPatterns = $state(settings?.noindex_patterns || []);
 	let notes = $state(settings?.notes || '');
+	
+	// Keep a stringified version to detect external changes
+	let lastSettingsJson = $state(JSON.stringify(settings));
 
+	// Sync from parent when external settings change
 	$effect(() => {
-		if (settings) {
-			canonicalStrategy = settings.canonical_strategy || '';
-			urlStructureRules = settings.url_structure_rules || '';
-			schemaOrgTypes = settings.schema_org_types || [];
-			internalLinkingGuidelines = settings.internal_linking_guidelines || '';
-			noindexPatterns = settings.noindex_patterns || [];
-			notes = settings.notes || '';
+		const currentJson = JSON.stringify(settings);
+		if (currentJson !== lastSettingsJson) {
+			// External change detected, sync down
+			lastSettingsJson = currentJson;
+			untrack(() => {
+				canonicalStrategy = settings?.canonical_strategy || '';
+				urlStructureRules = settings?.url_structure_rules || '';
+				schemaOrgTypes = settings?.schema_org_types || [];
+				internalLinkingGuidelines = settings?.internal_linking_guidelines || '';
+				noindexPatterns = settings?.noindex_patterns || [];
+				notes = settings?.notes || '';
+			});
 		}
 	});
 
-	// Update settings when values change
+	// Update parent when local values change
 	$effect(() => {
-		settings = {
-			...settings,
+		// Track all dependencies
+		canonicalStrategy;
+		urlStructureRules;
+		schemaOrgTypes;
+		internalLinkingGuidelines;
+		noindexPatterns;
+		notes;
+		
+		// Build new settings object
+		const newSettings = {
 			canonical_strategy: canonicalStrategy || undefined,
 			url_structure_rules: urlStructureRules || undefined,
 			schema_org_types: schemaOrgTypes.length > 0 ? schemaOrgTypes : undefined,
@@ -43,6 +61,14 @@
 			noindex_patterns: noindexPatterns.length > 0 ? noindexPatterns : undefined,
 			notes: notes || undefined
 		};
+		
+		const newJson = JSON.stringify(newSettings);
+		
+		// Only update if different to avoid cycles
+		if (newJson !== lastSettingsJson) {
+			lastSettingsJson = newJson;
+			settings = newSettings;
+		}
 	});
 </script>
 

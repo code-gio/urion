@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { navigating } from '$app/stores';
 	import { Button } from '$lib/components/ui/button';
 	import { getContext, setContext } from 'svelte';
 	import type { SettingsTab } from '$lib/types/project-settings.js';
@@ -10,6 +12,7 @@
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import PackageIcon from '@lucide/svelte/icons/package';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
+	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
 
 	let {
 		canEdit = true,
@@ -73,7 +76,7 @@
 	function navigateToTab(tab: SettingsTab) {
 		const tabConfig = tabs.find((t) => t.id === tab);
 		if (tabConfig && workspaceSlug && projectSlug) {
-			window.location.href = `/w/${workspaceSlug}/p/${projectSlug}/settings/${tabConfig.route}`;
+			goto(`/w/${workspaceSlug}/p/${projectSlug}/settings/${tabConfig.route}`);
 		}
 	}
 
@@ -92,7 +95,7 @@
 
 <div class="flex h-full">
 	<!-- Sidebar Navigation -->
-	<aside class="w-64 border-r bg-muted/40 p-4">
+	<aside class="w-64 border-r bg-muted/40 p-4 overflow-y-auto" style="height: calc(100vh - 150px);">
 		<div class="mb-6">
 			<h2 class="text-lg font-semibold">Settings</h2>
 			<p class="text-sm text-muted-foreground">Configure your project</p>
@@ -115,7 +118,16 @@
 	</aside>
 
 	<!-- Main Content -->
-	<div class="flex-1 flex flex-col overflow-hidden">
+	<div class="flex-1 flex flex-col relative" style="height: calc(100vh - 130px);">
+		{#if $navigating}
+			<div class="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+				<div class="flex flex-col items-center gap-3">
+					<LoaderCircleIcon class="h-8 w-8 animate-spin text-primary" />
+					<p class="text-sm text-muted-foreground">Loading settings...</p>
+				</div>
+			</div>
+		{/if}
+		
 		<div class="flex-1 overflow-y-auto p-6">
 			{@render children()}
 		</div>

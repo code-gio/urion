@@ -20,7 +20,7 @@
 		rule?: ProjectContentRule | null;
 		workspaceId: string;
 		projectId: string;
-		onSave?: () => void;
+		onSave?: (rule: ProjectContentRule) => void;
 	} = $props();
 
 	let ruleScope = $state<'path_prefix' | 'path_regex' | 'exact_url'>(
@@ -126,16 +126,17 @@
 				})
 			});
 
-			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.error || 'Failed to save content rule');
-			}
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to save content rule');
+		}
 
-			toast.success(rule?.id ? 'Content rule updated' : 'Content rule created');
-			open = false;
-			if (onSave) {
-				onSave();
-			}
+		const savedRule = await response.json();
+		toast.success(rule?.id ? 'Content rule updated' : 'Content rule created');
+		open = false;
+		if (onSave) {
+			onSave(savedRule);
+		}
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : 'Failed to save content rule');
 		} finally {
@@ -190,43 +191,40 @@
 				{/if}
 			</div>
 
-			<div class="space-y-3">
-				<div class="flex items-center space-x-2">
-					{@const aiEditChecked = allowAiEdit === true}
-					<Checkbox
-						id="allow-ai-edit"
-						checked={aiEditChecked}
-						onCheckedChange={(checked) => {
-							allowAiEdit = checked ? true : null;
-						}}
-					/>
-					<Label for="allow-ai-edit" class="cursor-pointer">Allow AI to edit content</Label>
-				</div>
-
-				<div class="flex items-center space-x-2">
-					{@const aiGenerateChecked = allowAiGenerate === true}
-					<Checkbox
-						id="allow-ai-generate"
-						checked={aiGenerateChecked}
-						onCheckedChange={(checked) => {
-							allowAiGenerate = checked ? true : null;
-						}}
-					/>
-					<Label for="allow-ai-generate" class="cursor-pointer">Allow AI to generate content</Label>
-				</div>
-
-				<div class="flex items-center space-x-2">
-					{@const indexChecked = allowIndex === true}
-					<Checkbox
-						id="allow-index"
-						checked={indexChecked}
-						onCheckedChange={(checked) => {
-							allowIndex = checked ? true : null;
-						}}
-					/>
-					<Label for="allow-index" class="cursor-pointer">Allow indexing (noindex if unchecked)</Label>
-				</div>
+		<div class="space-y-3">
+			<div class="flex items-center space-x-2">
+				<Checkbox
+					id="allow-ai-edit"
+					checked={allowAiEdit === true}
+					onCheckedChange={(checked) => {
+						allowAiEdit = checked ? true : null;
+					}}
+				/>
+				<Label for="allow-ai-edit" class="cursor-pointer">Allow AI to edit content</Label>
 			</div>
+
+			<div class="flex items-center space-x-2">
+				<Checkbox
+					id="allow-ai-generate"
+					checked={allowAiGenerate === true}
+					onCheckedChange={(checked) => {
+						allowAiGenerate = checked ? true : null;
+					}}
+				/>
+				<Label for="allow-ai-generate" class="cursor-pointer">Allow AI to generate content</Label>
+			</div>
+
+			<div class="flex items-center space-x-2">
+				<Checkbox
+					id="allow-index"
+					checked={allowIndex === true}
+					onCheckedChange={(checked) => {
+						allowIndex = checked ? true : null;
+					}}
+				/>
+				<Label for="allow-index" class="cursor-pointer">Allow indexing (noindex if unchecked)</Label>
+			</div>
+		</div>
 
 			<div class="space-y-2">
 				<Label for="notes">Notes</Label>
@@ -235,8 +233,8 @@
 		</div>
 
 		<Dialog.Footer>
-			<Dialog.Close asChild let:builder>
-				<Button builders={[builder]} variant="outline" disabled={isSaving}>
+			<Dialog.Close>
+				<Button variant="outline" disabled={isSaving}>
 					Cancel
 				</Button>
 			</Dialog.Close>

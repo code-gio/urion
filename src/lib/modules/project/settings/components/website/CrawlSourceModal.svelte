@@ -20,7 +20,7 @@
 		source?: ProjectCrawlSource | null;
 		workspaceId: string;
 		projectId: string;
-		onSave?: () => void;
+		onSave?: (source: ProjectCrawlSource) => void;
 	} = $props();
 
 	let sourceType = $state<CrawlSourceType>(source?.source_type || 'sitemap');
@@ -91,22 +91,24 @@
 				})
 			});
 
-			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.error || 'Failed to save crawl source');
-			}
-
-			toast.success(source?.id ? 'Crawl source updated' : 'Crawl source created');
-			open = false;
-			if (onSave) {
-				onSave();
-			}
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to save crawl source');
-		} finally {
-			isSaving = false;
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to save crawl source');
 		}
+
+		const savedSource = await response.json();
+		toast.success(source?.id ? 'Crawl source updated' : 'Crawl source created');
+		open = false;
+		
+		if (onSave) {
+			onSave(savedSource);
+		}
+	} catch (error) {
+		toast.error(error instanceof Error ? error.message : 'Failed to save crawl source');
+	} finally {
+		isSaving = false;
 	}
+}
 </script>
 
 <Dialog.Root bind:open>
@@ -157,8 +159,8 @@
 		</div>
 
 		<Dialog.Footer>
-			<Dialog.Close asChild let:builder>
-				<Button builders={[builder]} variant="outline" disabled={isSaving}>
+			<Dialog.Close>
+				<Button variant="outline" disabled={isSaving}>
 					Cancel
 				</Button>
 			</Dialog.Close>

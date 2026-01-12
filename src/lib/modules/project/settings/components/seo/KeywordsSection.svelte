@@ -22,15 +22,13 @@
 		clusters = [],
 		workspaceId,
 		projectId,
-		canEdit = true,
-		onSave
+		canEdit = true
 	}: {
 		keywords?: ProjectKeyword[];
 		clusters?: ProjectTopicCluster[];
 		workspaceId: string;
 		projectId: string;
 		canEdit?: boolean;
-		onSave?: () => void;
 	} = $props();
 
 	let searchTerm = $state('');
@@ -116,17 +114,14 @@
 				throw new Error(error.error || 'Failed to delete keyword');
 			}
 
-			toast.success('Keyword deleted');
-			keywords = keywords.filter((k) => k.id !== deletingKeyword!.id);
-			deleteModalOpen = false;
-			deletingKeyword = null;
-			if (onSave) {
-				onSave();
-			}
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to delete keyword');
-		}
+		toast.success('Keyword deleted');
+		keywords = keywords.filter((k) => k.id !== deletingKeyword!.id);
+		deleteModalOpen = false;
+		deletingKeyword = null;
+	} catch (error) {
+		toast.error(error instanceof Error ? error.message : 'Failed to delete keyword');
 	}
+}
 
 	async function assignToCluster(selected: { value: string } | null) {
 		const clusterId = selected?.value || null;
@@ -144,16 +139,19 @@
 				})
 			);
 
-			await Promise.all(updates);
-			toast.success(`Assigned ${selectedKeywords.size} keywords to cluster`);
-			selectedKeywords = new Set();
-			if (onSave) {
-				onSave();
-			}
-		} catch (error) {
-			toast.error('Failed to assign keywords');
-		}
+		await Promise.all(updates);
+		toast.success(`Assigned ${selectedKeywords.size} keywords to cluster`);
+		
+		// Update local keywords with new cluster_id
+		keywords = keywords.map(kw => 
+			selectedKeywords.has(kw.id) ? { ...kw, cluster_id: clusterId } : kw
+		);
+		
+		selectedKeywords = new Set();
+	} catch (error) {
+		toast.error('Failed to assign keywords');
 	}
+}
 
 	const assignClusterLabel = $derived('Assign to cluster');
 </script>
@@ -314,10 +312,8 @@
 	bind:open={bulkModalOpen}
 	{workspaceId}
 	{projectId}
-	onSave={() => {
-		if (onSave) {
-			onSave();
-		}
+	onSave={(newKeywords) => {
+		keywords = [...newKeywords, ...keywords];
 	}}
 />
 

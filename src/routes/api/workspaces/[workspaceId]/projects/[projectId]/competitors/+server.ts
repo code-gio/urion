@@ -237,9 +237,12 @@ export const DELETE: RequestHandler = async (event) => {
 		throw error(500, 'Failed to delete competitor');
 	}
 
-	return json({ success: true }, {
-		headers: {
-			'Cache-Control': 'no-cache, no-store, must-revalidate'
+	return json(
+		{ success: true },
+		{
+			headers: {
+				'Cache-Control': 'no-cache, no-store, must-revalidate'
+			}
 		}
 	);
 };

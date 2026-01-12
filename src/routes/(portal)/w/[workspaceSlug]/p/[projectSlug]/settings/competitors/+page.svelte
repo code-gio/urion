@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import CompetitorList from '$lib/modules/project/settings/components/competitors/CompetitorList.svelte';
 	import type { ProjectCompetitor } from '$lib/types/project-settings.js';
@@ -9,11 +8,12 @@
 	const workspace = $derived(data.workspace);
 	const project = $derived(data.project);
 	const canEdit = $derived(data.canEdit);
-	const competitors = $derived(data.competitors as ProjectCompetitor[]);
+	let competitors = $state<ProjectCompetitor[]>(data.competitors || []);
 
-	function handleSave() {
-		goto('.', { invalidateAll: true });
-	}
+	// Sync competitors when data changes
+	$effect(() => {
+		competitors = data.competitors || [];
+	});
 </script>
 
 <div class="max-w-4xl space-y-6">
@@ -33,7 +33,6 @@
 				workspaceId={workspace.id}
 				projectId={project.id}
 				{canEdit}
-				onSave={handleSave}
 			/>
 		</CardContent>
 	</Card>

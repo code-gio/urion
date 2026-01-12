@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import OfferingList from '$lib/modules/project/settings/components/offerings/OfferingList.svelte';
 	import type { ProjectOffering } from '$lib/types/project-settings.js';
@@ -9,11 +8,11 @@
 	const workspace = $derived(data.workspace);
 	const project = $derived(data.project);
 	const canEdit = $derived(data.canEdit);
-	const offerings = $derived(data.offerings as ProjectOffering[]);
+	let offerings = $state<ProjectOffering[]>(data.offerings || []);
 
-	function handleSave() {
-		goto('.', { invalidateAll: true });
-	}
+	$effect(() => {
+		offerings = data.offerings || [];
+	});
 </script>
 
 <div class="max-w-4xl space-y-6">
@@ -33,7 +32,6 @@
 				workspaceId={workspace.id}
 				projectId={project.id}
 				{canEdit}
-				onSave={handleSave}
 			/>
 		</CardContent>
 	</Card>

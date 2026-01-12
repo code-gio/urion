@@ -24,14 +24,12 @@
 		clusters = $bindable([]),
 		workspaceId,
 		projectId,
-		canEdit = true,
-		onSave
+		canEdit = true
 	}: {
 		clusters?: ProjectTopicCluster[];
 		workspaceId: string;
 		projectId: string;
 		canEdit?: boolean;
-		onSave?: () => void;
 	} = $props();
 
 	let editingCluster = $state<ProjectTopicCluster | null>(null);
@@ -95,23 +93,29 @@
 				})
 			});
 
-			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.error || 'Failed to save topic cluster');
-			}
-
-			toast.success(editingCluster?.id ? 'Topic cluster updated' : 'Topic cluster created');
-			modalOpen = false;
-			// Reload - parent will handle
-			if (onSave) {
-				onSave();
-			}
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to save topic cluster');
-		} finally {
-			isSaving = false;
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to save topic cluster');
 		}
+
+		const savedCluster = await response.json();
+		toast.success(editingCluster?.id ? 'Topic cluster updated' : 'Topic cluster created');
+		
+		// Update local array
+		const index = clusters.findIndex(c => c.id === savedCluster.id);
+		if (index >= 0) {
+			clusters[index] = savedCluster;
+		} else {
+			clusters = [savedCluster, ...clusters];
+		}
+		
+		modalOpen = false;
+	} catch (error) {
+		toast.error(error instanceof Error ? error.message : 'Failed to save topic cluster');
+	} finally {
+		isSaving = false;
 	}
+}
 
 	async function handleDelete() {
 		if (!deletingCluster) return;
@@ -129,17 +133,14 @@
 				throw new Error(error.error || 'Failed to delete topic cluster');
 			}
 
-			toast.success('Topic cluster deleted');
-			clusters = clusters.filter((c) => c.id !== deletingCluster!.id);
-			deleteModalOpen = false;
-			deletingCluster = null;
-			if (onSave) {
-				onSave();
-			}
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to delete topic cluster');
-		}
+		toast.success('Topic cluster deleted');
+		clusters = clusters.filter((c) => c.id !== deletingCluster!.id);
+		deleteModalOpen = false;
+		deletingCluster = null;
+	} catch (error) {
+		toast.error(error instanceof Error ? error.message : 'Failed to delete topic cluster');
 	}
+}
 
 </script>
 
@@ -241,8 +242,8 @@
 		</div>
 
 		<Dialog.Footer>
-			<Dialog.Close asChild let:builder>
-				<Button builders={[builder]} variant="outline" disabled={isSaving}>
+			<Dialog.Close>
+				<Button variant="outline" disabled={isSaving}>
 					Cancel
 				</Button>
 			</Dialog.Close>

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import ContentRuleList from '$lib/modules/project/settings/components/content-rules/ContentRuleList.svelte';
 	import type { ProjectContentRule } from '$lib/types/project-settings.js';
@@ -9,11 +8,11 @@
 	const workspace = $derived(data.workspace);
 	const project = $derived(data.project);
 	const canEdit = $derived(data.canEdit);
-	const rules = $derived(data.rules as ProjectContentRule[]);
+	let rules = $state<ProjectContentRule[]>(data.rules || []);
 
-	function handleSave() {
-		goto('.', { invalidateAll: true });
-	}
+	$effect(() => {
+		rules = data.rules || [];
+	});
 </script>
 
 <div class="max-w-4xl space-y-6">
@@ -36,7 +35,6 @@
 				workspaceId={workspace.id}
 				projectId={project.id}
 				{canEdit}
-				onSave={handleSave}
 			/>
 		</CardContent>
 	</Card>

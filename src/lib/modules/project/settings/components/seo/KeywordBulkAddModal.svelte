@@ -16,7 +16,7 @@
 		open?: boolean;
 		workspaceId: string;
 		projectId: string;
-		onSave?: () => void;
+		onSave?: (keywords: any[]) => void;
 	} = $props();
 
 	let keywordsText = $state('');
@@ -73,19 +73,19 @@
 				throw new Error(error.error || 'Failed to import keywords');
 			}
 
-			const result = await response.json();
-			toast.success(`Imported ${result.length} keywords`);
-			keywordsText = '';
-			open = false;
-			if (onSave) {
-				onSave();
-			}
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to import keywords');
-		} finally {
-			isSaving = false;
+		const result = await response.json();
+		toast.success(`Imported ${result.length} keywords`);
+		keywordsText = '';
+		open = false;
+		if (onSave) {
+			onSave(result);
 		}
+	} catch (error) {
+		toast.error(error instanceof Error ? error.message : 'Failed to import keywords');
+	} finally {
+		isSaving = false;
 	}
+}
 </script>
 
 <Dialog.Root bind:open>
@@ -159,8 +159,8 @@
 		</div>
 
 		<Dialog.Footer>
-			<Dialog.Close asChild let:builder>
-				<Button builders={[builder]} variant="outline" disabled={isSaving}>
+			<Dialog.Close>
+				<Button variant="outline" disabled={isSaving}>
 					Cancel
 				</Button>
 			</Dialog.Close>

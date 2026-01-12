@@ -15,7 +15,12 @@
 	const project = $derived(data.project);
 	const canEdit = $derived(data.canEdit);
 	const settings = $derived(data.settings as ProjectSettingsRow | null);
-	const crawlSources = $derived(data.crawlSources as ProjectCrawlSource[]);
+	let crawlSources = $state<ProjectCrawlSource[]>(data.crawlSources || []);
+
+	// Sync crawlSources when data changes
+	$effect(() => {
+		crawlSources = data.crawlSources || [];
+	});
 
 	// Site settings from JSONB
 	let canonicalDomain = $state(settings?.settings?.site?.canonical_domain || '');
@@ -89,14 +94,14 @@
 				throw new Error(error.error || 'Failed to update settings');
 			}
 
-			toast.success('Website settings updated successfully');
-			goto('.', { invalidateAll: true });
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to update settings');
-		} finally {
-			isSaving = false;
-		}
+		toast.success('Website settings updated successfully');
+		isDirty = false;
+	} catch (error) {
+		toast.error(error instanceof Error ? error.message : 'Failed to update settings');
+	} finally {
+		isSaving = false;
 	}
+}
 
 	function resetForm() {
 		if (settings) {
@@ -109,8 +114,8 @@
 	}
 
 	function handleCrawlSourceSave() {
-		// Reload page to refresh crawl sources
-		goto('.', { invalidateAll: true });
+		// Refresh only crawl sources data
+		toast.success('Crawl source saved');
 	}
 
 	// Register save and cancel handlers with parent SettingsShell
@@ -123,14 +128,16 @@
 		}) => void;
 	}>('settings-shell');
 
-	if (canEdit && settingsShell) {
-		settingsShell.setActions({
-			onSave: saveSettings,
-			onCancel: resetForm,
-			isDirty,
-			isSaving
-		});
-	}
+	$effect(() => {
+		if (canEdit && settingsShell) {
+			settingsShell.setActions({
+				onSave: saveSettings,
+				onCancel: resetForm,
+				isDirty,
+				isSaving
+			});
+		}
+	});
 </script>
 
 <div class="max-w-4xl space-y-6">

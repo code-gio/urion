@@ -131,24 +131,35 @@ export const PATCH: RequestHandler = async (event) => {
 
 	// Upsert settings
 	const { data: updatedSettings, error: updateError } = await supabase
-		.from('project_settings')
-		.upsert(
-			{
-				project_id: projectId,
-				workspace_id: workspaceId,
-				...updateData,
-				created_by: currentSettings?.created_by || user.id
-			},
-			{
-				onConflict: 'project_id,workspace_id'
-			}
-		)
-		.select()
-		.single();
+    .from("project_settings")
+    .upsert(
+      {
+        project_id: projectId,
+        workspace_id: workspaceId,
+        ...updateData,
+        created_by: user.id,
+      },
+      {
+        onConflict: "project_id",
+        ignoreDuplicates: false,
+      }
+    )
+    .select()
+    .single();
 
-	if (updateError) {
-		throw error(500, 'Failed to update project settings');
-	}
+  if (updateError) {
+    console.error("[SETTINGS UPDATE ERROR]", {
+      error: updateError,
+      message: updateError.message,
+      details: updateError.details,
+      hint: updateError.hint,
+      code: updateError.code,
+    });
+    throw error(
+      500,
+      `Failed to update project settings: ${updateError.message}`
+    );
+  }
 
 	return json(updatedSettings, {
 		headers: {

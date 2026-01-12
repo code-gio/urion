@@ -21,14 +21,12 @@
 		rules = $bindable([]),
 		workspaceId,
 		projectId,
-		canEdit = true,
-		onSave
+		canEdit = true
 	}: {
 		rules?: ProjectContentRule[];
 		workspaceId: string;
 		projectId: string;
 		canEdit?: boolean;
-		onSave?: () => void;
 	} = $props();
 
 	let editingRule = $state<ProjectContentRule | null>(null);
@@ -71,9 +69,12 @@
 		}
 	}
 
-	async function handleSave() {
-		if (onSave) {
-			onSave();
+	function handleSave(savedRule: ProjectContentRule) {
+		const index = rules.findIndex((r) => r.id === savedRule.id);
+		if (index >= 0) {
+			rules[index] = savedRule;
+		} else {
+			rules = [savedRule, ...rules];
 		}
 		modalOpen = false;
 		editingRule = null;

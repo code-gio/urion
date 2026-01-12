@@ -71,10 +71,15 @@
 		}
 	}
 
-	async function handleSave() {
-		// Reload sources
-		if (onSave) {
-			onSave();
+	function handleSave(savedSource: ProjectCrawlSource) {
+		// Update local array
+		const index = sources.findIndex(s => s.id === savedSource.id);
+		if (index >= 0) {
+			// Update existing
+			sources[index] = savedSource;
+		} else {
+			// Add new
+			sources = [savedSource, ...sources];
 		}
 		modalOpen = false;
 		editingSource = null;

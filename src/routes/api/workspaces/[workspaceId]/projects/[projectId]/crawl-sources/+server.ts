@@ -44,217 +44,271 @@ export const GET: RequestHandler = async (event) => {
 };
 
 export const POST: RequestHandler = async (event) => {
-	await applySecurity(event, {
-		csrf: true,
-		rateLimit: 'create',
-		validateUUIDs: ['workspaceId', 'projectId'],
-		maxBodySize: 10 * 1024
-	});
+  await applySecurity(event, {
+    csrf: true,
+    rateLimit: "create",
+    validateUUIDs: ["workspaceId", "projectId"],
+    maxBodySize: 10 * 1024,
+  });
 
-	const { params, request, locals } = event;
-	const { session, user } = await locals.safeGetSession();
+  const { params, request, locals } = event;
+  const { session, user } = await locals.safeGetSession();
 
-	if (!session || !user) {
-		throw error(401, 'Unauthorized');
-	}
+  if (!session || !user) {
+    throw error(401, "Unauthorized");
+  }
 
-	const { workspaceId, projectId } = params;
-	const supabase = locals.supabase;
+  const { workspaceId, projectId } = params;
+  const supabase = locals.supabase;
 
-	// Check access
-	const { authorized } = await checkProjectAccess(supabase, user.id, workspaceId, projectId);
+  // Check access
+  const { authorized } = await checkProjectAccess(
+    supabase,
+    user.id,
+    workspaceId,
+    projectId
+  );
 
-	if (!authorized) {
-		throw error(403, 'Forbidden');
-	}
+  if (!authorized) {
+    throw error(403, "Forbidden");
+  }
 
-	const body = await request.json();
-	const { source_type, url, is_primary, include_patterns, exclude_patterns, respect_robots, notes } = body;
+  const body = await request.json();
+  const {
+    source_type,
+    url,
+    is_primary,
+    include_patterns,
+    exclude_patterns,
+    respect_robots,
+    notes,
+  } = body;
 
-	// Validate
-	if (!source_type || !url) {
-		throw error(400, 'source_type and url are required');
-	}
+  console.log('[CRAWL SOURCE CREATE]', {
+    source_type,
+    url,
+    is_primary,
+    body
+  });
 
-	const validatedUrl = validateURL(url);
-	if (!validatedUrl) {
-		throw error(400, 'Invalid URL');
-	}
+  // Validate
+  if (!source_type || !url) {
+    throw error(400, "source_type and url are required");
+  }
 
-	// If this is marked as primary, unset other primary sources of the same type
-	if (is_primary) {
-		await supabase
-			.from('project_crawl_sources')
-			.update({ is_primary: false })
-			.eq('project_id', projectId)
-			.eq('workspace_id', workspaceId)
-			.eq('source_type', source_type);
-	}
+  let validatedUrl: string | null;
+  try {
+    validatedUrl = validateURL(url);
+  } catch (err) {
+    console.error('[CRAWL SOURCE VALIDATION ERROR]', err);
+    throw error(400, err instanceof Error ? err.message : "Invalid URL");
+  }
 
-	// Create crawl source
-	const { data: newSource, error: createError } = await supabase
-		.from('project_crawl_sources')
-		.insert({
-			workspace_id: workspaceId,
-			project_id: projectId,
-			source_type: source_type as CrawlSourceType,
-			url: validatedUrl,
-			is_primary: is_primary || false,
-			include_patterns: include_patterns || [],
-			exclude_patterns: exclude_patterns || [],
-			respect_robots: respect_robots !== false,
-			notes: notes || null,
-			created_by: user.id
-		})
-		.select()
-		.single();
+  if (!validatedUrl) {
+    throw error(400, "Invalid URL");
+  }
 
-	if (createError) {
-		throw error(500, 'Failed to create crawl source');
-	}
+  // If this is marked as primary, unset other primary sources of the same type
+  if (is_primary) {
+    await supabase
+      .from("project_crawl_sources")
+      .update({ is_primary: false })
+      .eq("project_id", projectId)
+      .eq("workspace_id", workspaceId)
+      .eq("source_type", source_type);
+  }
 
-	return json(newSource, {
-		headers: {
-			'Cache-Control': 'no-cache, no-store, must-revalidate'
-		}
-	});
+  // Create crawl source
+  const { data: newSource, error: createError } = await supabase
+    .from("project_crawl_sources")
+    .insert({
+      workspace_id: workspaceId,
+      project_id: projectId,
+      source_type: source_type as CrawlSourceType,
+      url: validatedUrl,
+      is_primary: is_primary || false,
+      include_patterns: include_patterns || [],
+      exclude_patterns: exclude_patterns || [],
+      respect_robots: respect_robots !== false,
+      notes: notes || null,
+      created_by: user.id,
+    })
+    .select()
+    .single();
+
+  if (createError) {
+    throw error(500, "Failed to create crawl source");
+  }
+
+  return json(newSource, {
+    headers: {
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+    },
+  });
 };
 
 export const PATCH: RequestHandler = async (event) => {
-	await applySecurity(event, {
-		csrf: true,
-		rateLimit: 'update',
-		validateUUIDs: ['workspaceId', 'projectId'],
-		maxBodySize: 10 * 1024
-	});
+  await applySecurity(event, {
+    csrf: true,
+    rateLimit: "update",
+    validateUUIDs: ["workspaceId", "projectId"],
+    maxBodySize: 10 * 1024,
+  });
 
-	const { params, url: requestUrl, request, locals } = event;
-	const { session, user } = await locals.safeGetSession();
+  const { params, url: requestUrl, request, locals } = event;
+  const { session, user } = await locals.safeGetSession();
 
-	if (!session || !user) {
-		throw error(401, 'Unauthorized');
-	}
+  if (!session || !user) {
+    throw error(401, "Unauthorized");
+  }
 
-	const { workspaceId, projectId } = params;
-	const sourceId = requestUrl.searchParams.get('id');
+  const { workspaceId, projectId } = params;
+  const sourceId = requestUrl.searchParams.get("id");
 
-	if (!sourceId) {
-		throw error(400, 'Source ID is required');
-	}
+  if (!sourceId) {
+    throw error(400, "Source ID is required");
+  }
 
-	const supabase = locals.supabase;
+  const supabase = locals.supabase;
 
-	// Check access
-	const { authorized } = await checkProjectAccess(supabase, user.id, workspaceId, projectId);
+  // Check access
+  const { authorized } = await checkProjectAccess(
+    supabase,
+    user.id,
+    workspaceId,
+    projectId
+  );
 
-	if (!authorized) {
-		throw error(403, 'Forbidden');
-	}
+  if (!authorized) {
+    throw error(403, "Forbidden");
+  }
 
-	const body = await request.json();
-	const { url, is_primary, source_type, include_patterns, exclude_patterns, respect_robots, notes } = body;
+  const body = await request.json();
+  const {
+    url,
+    is_primary,
+    source_type,
+    include_patterns,
+    exclude_patterns,
+    respect_robots,
+    notes,
+  } = body;
 
-	const updateData: Partial<ProjectCrawlSource> = {
-		updated_at: new Date().toISOString()
-	};
+  const updateData: Partial<ProjectCrawlSource> = {
+    updated_at: new Date().toISOString(),
+  };
 
-	if (url !== undefined) {
-		const validatedUrl = validateURL(url);
-		if (!validatedUrl) {
-			throw error(400, 'Invalid URL');
-		}
-		updateData.url = validatedUrl;
-	}
-	if (is_primary !== undefined) {
-		updateData.is_primary = is_primary;
-		// If setting as primary, unset others of same type
-		if (is_primary && source_type) {
-			await supabase
-				.from('project_crawl_sources')
-				.update({ is_primary: false })
-				.eq('project_id', projectId)
-				.eq('workspace_id', workspaceId)
-				.eq('source_type', source_type)
-				.neq('id', sourceId);
-		}
-	}
-	if (include_patterns !== undefined) {
-		updateData.include_patterns = include_patterns;
-	}
-	if (exclude_patterns !== undefined) {
-		updateData.exclude_patterns = exclude_patterns;
-	}
-	if (respect_robots !== undefined) {
-		updateData.respect_robots = respect_robots;
-	}
-	if (notes !== undefined) {
-		updateData.notes = notes;
-	}
+  if (url !== undefined) {
+    let validatedUrl: string | null;
+    try {
+      validatedUrl = validateURL(url);
+    } catch (err) {
+      throw error(400, err instanceof Error ? err.message : "Invalid URL");
+    }
 
-	const { data: updatedSource, error: updateError } = await supabase
-		.from('project_crawl_sources')
-		.update(updateData)
-		.eq('id', sourceId)
-		.eq('project_id', projectId)
-		.eq('workspace_id', workspaceId)
-		.select()
-		.single();
+    if (!validatedUrl) {
+      throw error(400, "Invalid URL");
+    }
+    updateData.url = validatedUrl;
+  }
+  if (is_primary !== undefined) {
+    updateData.is_primary = is_primary;
+    // If setting as primary, unset others of same type
+    if (is_primary && source_type) {
+      await supabase
+        .from("project_crawl_sources")
+        .update({ is_primary: false })
+        .eq("project_id", projectId)
+        .eq("workspace_id", workspaceId)
+        .eq("source_type", source_type)
+        .neq("id", sourceId);
+    }
+  }
+  if (include_patterns !== undefined) {
+    updateData.include_patterns = include_patterns;
+  }
+  if (exclude_patterns !== undefined) {
+    updateData.exclude_patterns = exclude_patterns;
+  }
+  if (respect_robots !== undefined) {
+    updateData.respect_robots = respect_robots;
+  }
+  if (notes !== undefined) {
+    updateData.notes = notes;
+  }
 
-	if (updateError) {
-		throw error(500, 'Failed to update crawl source');
-	}
+  const { data: updatedSource, error: updateError } = await supabase
+    .from("project_crawl_sources")
+    .update(updateData)
+    .eq("id", sourceId)
+    .eq("project_id", projectId)
+    .eq("workspace_id", workspaceId)
+    .select()
+    .single();
 
-	return json(updatedSource, {
-		headers: {
-			'Cache-Control': 'no-cache, no-store, must-revalidate'
-		}
-	});
+  if (updateError) {
+    throw error(500, "Failed to update crawl source");
+  }
+
+  return json(updatedSource, {
+    headers: {
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+    },
+  });
 };
 
 export const DELETE: RequestHandler = async (event) => {
-	await applySecurity(event, {
-		csrf: true,
-		rateLimit: 'delete',
-		validateUUIDs: ['workspaceId', 'projectId']
-	});
+  await applySecurity(event, {
+    csrf: true,
+    rateLimit: "delete",
+    validateUUIDs: ["workspaceId", "projectId"],
+  });
 
-	const { params, url: requestUrl, locals } = event;
-	const { session, user } = await locals.safeGetSession();
+  const { params, url: requestUrl, locals } = event;
+  const { session, user } = await locals.safeGetSession();
 
-	if (!session || !user) {
-		throw error(401, 'Unauthorized');
-	}
+  if (!session || !user) {
+    throw error(401, "Unauthorized");
+  }
 
-	const { workspaceId, projectId } = params;
-	const sourceId = requestUrl.searchParams.get('id');
+  const { workspaceId, projectId } = params;
+  const sourceId = requestUrl.searchParams.get("id");
 
-	if (!sourceId) {
-		throw error(400, 'Source ID is required');
-	}
+  if (!sourceId) {
+    throw error(400, "Source ID is required");
+  }
 
-	const supabase = locals.supabase;
+  const supabase = locals.supabase;
 
-	// Check access
-	const { authorized } = await checkProjectAccess(supabase, user.id, workspaceId, projectId);
+  // Check access
+  const { authorized } = await checkProjectAccess(
+    supabase,
+    user.id,
+    workspaceId,
+    projectId
+  );
 
-	if (!authorized) {
-		throw error(403, 'Forbidden');
-	}
+  if (!authorized) {
+    throw error(403, "Forbidden");
+  }
 
-	const { error: deleteError } = await supabase
-		.from('project_crawl_sources')
-		.delete()
-		.eq('id', sourceId)
-		.eq('project_id', projectId)
-		.eq('workspace_id', workspaceId);
+  const { error: deleteError } = await supabase
+    .from("project_crawl_sources")
+    .delete()
+    .eq("id", sourceId)
+    .eq("project_id", projectId)
+    .eq("workspace_id", workspaceId);
 
-	if (deleteError) {
-		throw error(500, 'Failed to delete crawl source');
-	}
+  if (deleteError) {
+    throw error(500, "Failed to delete crawl source");
+  }
 
-	return json({ success: true }, {
-		headers: {
-			'Cache-Control': 'no-cache, no-store, must-revalidate'
-		}
-	);
+  return json(
+    { success: true },
+    {
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+      },
+    }
+  );
 };

@@ -134,10 +134,16 @@ export function validateURL(url: string | null | undefined): string | null {
 	if (!url) {
 		return null;
 	}
-	const sanitized = url.trim();
-	if (sanitized.length > 2048) {
-		throw new Error('URL is too long');
-	}
+	let sanitized = url.trim();
+  if (sanitized.length > 2048) {
+    throw new Error("URL is too long");
+  }
+
+  // Add https:// if no protocol is specified
+  if (!sanitized.match(/^[a-zA-Z][a-zA-Z\d+\-.]*:/)) {
+    sanitized = `https://${sanitized}`;
+  }
+	
 	try {
 		new URL(sanitized);
 		return sanitized;

@@ -18,9 +18,15 @@
 	const workspace = $derived(data.workspace);
 	const project = $derived(data.project);
 	const canEdit = $derived(data.canEdit);
-	const clusters = $derived(data.clusters as ProjectTopicCluster[]);
-	const keywords = $derived(data.keywords as ProjectKeyword[]);
+	let clusters = $state<ProjectTopicCluster[]>(data.clusters || []);
+	let keywords = $state<ProjectKeyword[]>(data.keywords || []);
 	const seoSettings = $derived(data.seoSettings as SeoSettings);
+
+	// Sync clusters and keywords when data changes
+	$effect(() => {
+		clusters = data.clusters || [];
+		keywords = data.keywords || [];
+	});
 
 	let isSaving = $state(false);
 	let isDirty = $state(false);
@@ -72,34 +78,31 @@
 				throw new Error(error.error || 'Failed to update SEO settings');
 			}
 
-			toast.success('SEO settings updated successfully');
-			goto('.', { invalidateAll: true });
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to update SEO settings');
-		} finally {
-			isSaving = false;
-		}
-	}
-
-	function resetForm() {
-		currentSeoSettings = seoSettings;
+		toast.success('SEO settings updated successfully');
 		isDirty = false;
+	} catch (error) {
+		toast.error(error instanceof Error ? error.message : 'Failed to update SEO settings');
+	} finally {
+		isSaving = false;
 	}
+}
 
-	function handleSave() {
-		goto('.', { invalidateAll: true });
-	}
+function resetForm() {
+	currentSeoSettings = seoSettings;
+	isDirty = false;
+}
 
-	// Register save and cancel handlers with parent SettingsShell
-	const settingsShell = getContext<{
-		setActions: (actions: {
-			onSave?: () => void | Promise<void>;
-			onCancel?: () => void;
-			isDirty?: boolean;
-			isSaving?: boolean;
-		}) => void;
-	}>('settings-shell');
+// Register save and cancel handlers with parent SettingsShell
+const settingsShell = getContext<{
+	setActions: (actions: {
+		onSave?: () => void | Promise<void>;
+		onCancel?: () => void;
+		isDirty?: boolean;
+		isSaving?: boolean;
+	}) => void;
+}>('settings-shell');
 
+$effect(() => {
 	if (canEdit && settingsShell) {
 		settingsShell.setActions({
 			onSave: saveSettings,
@@ -108,6 +111,7 @@
 			isSaving
 		});
 	}
+});
 </script>
 
 <div class="max-w-6xl space-y-6">
@@ -122,13 +126,12 @@
 			<CardDescription>Organize your content into topic clusters and pillars</CardDescription>
 		</CardHeader>
 		<CardContent>
-			<TopicClustersSection
-				bind:clusters={clusters}
-				workspaceId={workspace.id}
-				projectId={project.id}
-				{canEdit}
-				onSave={handleSave}
-			/>
+		<TopicClustersSection
+			bind:clusters={clusters}
+			workspaceId={workspace.id}
+			projectId={project.id}
+			{canEdit}
+		/>
 		</CardContent>
 	</Card>
 
@@ -138,14 +141,13 @@
 			<CardDescription>Manage keywords, assign to clusters, and set target pages</CardDescription>
 		</CardHeader>
 		<CardContent>
-			<KeywordsSection
-				bind:keywords={keywords}
-				{clusters}
-				workspaceId={workspace.id}
-				projectId={project.id}
-				{canEdit}
-				onSave={handleSave}
-			/>
+		<KeywordsSection
+			bind:keywords={keywords}
+			{clusters}
+			workspaceId={workspace.id}
+			projectId={project.id}
+			{canEdit}
+		/>
 		</CardContent>
 	</Card>
 

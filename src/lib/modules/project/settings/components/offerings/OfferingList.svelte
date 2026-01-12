@@ -21,14 +21,12 @@
 		offerings = $bindable([]),
 		workspaceId,
 		projectId,
-		canEdit = true,
-		onSave
+		canEdit = true
 	}: {
 		offerings?: ProjectOffering[];
 		workspaceId: string;
 		projectId: string;
 		canEdit?: boolean;
-		onSave?: () => void;
 	} = $props();
 
 	let editingOffering = $state<ProjectOffering | null>(null);
@@ -71,9 +69,12 @@
 		}
 	}
 
-	async function handleSave() {
-		if (onSave) {
-			onSave();
+	function handleSave(savedOffering: ProjectOffering) {
+		const index = offerings.findIndex((o) => o.id === savedOffering.id);
+		if (index >= 0) {
+			offerings[index] = savedOffering;
+		} else {
+			offerings = [savedOffering, ...offerings];
 		}
 		modalOpen = false;
 		editingOffering = null;

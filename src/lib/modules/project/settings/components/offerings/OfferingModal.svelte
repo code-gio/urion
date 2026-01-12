@@ -19,7 +19,7 @@
 		offering?: ProjectOffering | null;
 		workspaceId: string;
 		projectId: string;
-		onSave?: () => void;
+		onSave?: (offering: ProjectOffering) => void;
 	} = $props();
 
 	let name = $state(offering?.name || '');
@@ -78,16 +78,17 @@
 				})
 			});
 
-			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.error || 'Failed to save offering');
-			}
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to save offering');
+		}
 
-			toast.success(offering?.id ? 'Offering updated' : 'Offering created');
-			open = false;
-			if (onSave) {
-				onSave();
-			}
+		const savedOffering = await response.json();
+		toast.success(offering?.id ? 'Offering updated' : 'Offering created');
+		open = false;
+		if (onSave) {
+			onSave(savedOffering);
+		}
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : 'Failed to save offering');
 		} finally {
@@ -150,8 +151,8 @@
 		</div>
 
 		<Dialog.Footer>
-			<Dialog.Close asChild let:builder>
-				<Button builders={[builder]} variant="outline" disabled={isSaving}>
+			<Dialog.Close >
+				<Button variant="outline" disabled={isSaving}>
 					Cancel
 				</Button>
 			</Dialog.Close>

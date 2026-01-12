@@ -21,14 +21,12 @@
 		competitors = $bindable([]),
 		workspaceId,
 		projectId,
-		canEdit = true,
-		onSave
+		canEdit = true
 	}: {
 		competitors?: ProjectCompetitor[];
 		workspaceId: string;
 		projectId: string;
 		canEdit?: boolean;
-		onSave?: () => void;
 	} = $props();
 
 	let editingCompetitor = $state<ProjectCompetitor | null>(null);
@@ -71,9 +69,15 @@
 		}
 	}
 
-	async function handleSave() {
-		if (onSave) {
-			onSave();
+	function handleSave(savedCompetitor: ProjectCompetitor) {
+		// Update local array
+		const index = competitors.findIndex(c => c.id === savedCompetitor.id);
+		if (index >= 0) {
+			// Update existing
+			competitors[index] = savedCompetitor;
+		} else {
+			// Add new
+			competitors = [savedCompetitor, ...competitors];
 		}
 		modalOpen = false;
 		editingCompetitor = null;

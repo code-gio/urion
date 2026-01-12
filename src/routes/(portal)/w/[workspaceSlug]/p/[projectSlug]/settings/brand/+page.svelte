@@ -138,14 +138,14 @@
 				throw new Error(error.error || 'Failed to update brand settings');
 			}
 
-			toast.success('Brand voice settings updated successfully');
-			goto('.', { invalidateAll: true });
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to update brand settings');
-		} finally {
-			isSaving = false;
-		}
+		toast.success('Brand voice settings updated successfully');
+		isDirty = false;
+	} catch (error) {
+		toast.error(error instanceof Error ? error.message : 'Failed to update brand settings');
+	} finally {
+		isSaving = false;
 	}
+}
 
 	function resetForm() {
 		if (settings) {
@@ -176,14 +176,16 @@
 		}) => void;
 	}>('settings-shell');
 
-	if (canEdit && settingsShell) {
-		settingsShell.setActions({
-			onSave: saveSettings,
-			onCancel: resetForm,
-			isDirty,
-			isSaving
-		});
-	}
+	$effect(() => {
+		if (canEdit && settingsShell) {
+			settingsShell.setActions({
+				onSave: saveSettings,
+				onCancel: resetForm,
+				isDirty,
+				isSaving
+			});
+		}
+	});
 </script>
 
 <div class="max-w-4xl space-y-6">

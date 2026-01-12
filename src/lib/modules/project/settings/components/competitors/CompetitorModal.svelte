@@ -20,7 +20,7 @@
 		competitor?: ProjectCompetitor | null;
 		workspaceId: string;
 		projectId: string;
-		onSave?: () => void;
+		onSave?: (competitor: ProjectCompetitor) => void;
 	} = $props();
 
 	let name = $state(competitor?.name || '');
@@ -102,19 +102,21 @@
 
 			if (!response.ok) {
 				const error = await response.json();
-				throw new Error(error.error || 'Failed to save competitor');
-			}
-
-			toast.success(competitor?.id ? 'Competitor updated' : 'Competitor created');
-			open = false;
-			if (onSave) {
-				onSave();
-			}
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to save competitor');
-		} finally {
-			isSaving = false;
+			throw new Error(error.error || 'Failed to save competitor');
 		}
+
+		const savedCompetitor = await response.json();
+		toast.success(competitor?.id ? 'Competitor updated' : 'Competitor created');
+		open = false;
+		
+		if (onSave) {
+			onSave(savedCompetitor);
+		}
+	} catch (error) {
+		toast.error(error instanceof Error ? error.message : 'Failed to save competitor');
+	} finally {
+		isSaving = false;
+	}
 	}
 </script>
 
@@ -197,8 +199,8 @@
 		</div>
 
 		<Dialog.Footer>
-			<Dialog.Close asChild let:builder>
-				<Button builders={[builder]} variant="outline" disabled={isSaving}>
+			<Dialog.Close >
+				<Button variant="outline" disabled={isSaving}>
 					Cancel
 				</Button>
 			</Dialog.Close>
