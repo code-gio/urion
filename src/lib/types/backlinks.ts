@@ -43,64 +43,64 @@ export type BacklinkStatus = 'active' | 'broken' | 'reviewing' | 'inactive';
 // ============================================================================
 
 export interface BacklinkSite {
-	id: string;
-	name: string;
-	url: string;
-	description: string | null;
+  id: string;
+  name: string;
+  url: string;
+  description: string | null;
 
-	// Status
-	status: BacklinkStatus;
+  // Status
+  status: BacklinkStatus;
 
-	// Categorization
-	category: BacklinkCategory;
-	speciality: string | null;
-	tags: string[];
+  // Categorization
+  primary_category: BacklinkCategory;
+  speciality: string | null;
+  tags: string[];
 
-	// SEO Metrics
-	dr: number | null;
-	page_authority: number | null;
-	spam_score: number | null;
-	link_type: LinkType;
-	traffic: string | null;
+  // SEO Metrics
+  dr: number | null;
+  page_authority: number | null;
+  spam_score: number | null;
+  link_type: LinkType;
+  traffic: string | null;
 
-	// Submission Info
-	submission_url: string | null;
-	submission_instructions: string | null;
-	typical_approval_time: string | null;
-	difficulty_level: Difficulty | null;
-	estimated_time_minutes: number | null;
+  // Submission Info
+  submission_url: string | null;
+  submission_instructions: string | null;
+  typical_approval_time: string | null;
+  difficulty_level: Difficulty | null;
+  estimated_time_minutes: number | null;
 
-	// Requirements
-	requires_registration: boolean;
-	requires_approval: boolean;
-	requires_payment_verification: boolean;
-	instant_approval: boolean;
-	minimum_requirements: string | null;
-	required_fields: string[];
-	geographic_restrictions: string[];
-	accepted_niches: string[];
+  // Requirements
+  requires_registration: boolean;
+  requires_approval: boolean;
+  requires_payment_verification: boolean;
+  instant_approval: boolean;
+  minimum_requirements: string | null;
+  required_fields: string[];
+  geographic_restrictions: string[];
+  accepted_niches: string[];
 
-	// Cost
-	cost: string | null; // Legacy
-	cost_type: CostType | null;
-	pricing_details: string | null;
+  // Cost
+  cost: string | null; // Legacy
+  cost_type: CostType | null;
+  pricing_details: string | null;
 
-	// Quality
-	is_verified: boolean;
-	user_rating: number | null;
-	success_rate: number | null;
-	submission_count: number;
+  // Quality
+  is_verified: boolean;
+  user_rating: number | null;
+  success_rate: number | null;
+  submission_count: number;
 
-	// TLD
-	tld: string | null;
+  // TLD
+  tld: string | null;
 
-	// Metadata
-	added_by: string | null;
-	last_checked_at: string | null;
-	broken_reports: number;
-	notes_admin: string | null;
-	created_at: string;
-	updated_at: string;
+  // Metadata
+  added_by: string | null;
+  last_checked_at: string | null;
+  broken_reports: number;
+  notes_admin: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface BacklinkSubmission {
@@ -164,32 +164,32 @@ export interface BacklinkSiteWithSubmission extends BacklinkSite {
 
 // Browse Sites
 export interface GetBacklinkSitesParams {
-	// Filtering
-	category?: BacklinkCategory | BacklinkCategory[];
-	link_type?: LinkType | LinkType[];
-	cost_type?: CostType | CostType[];
-	difficulty?: Difficulty | Difficulty[];
+  // Filtering
+  category?: BacklinkCategory | BacklinkCategory[];
+  link_type?: LinkType | LinkType[];
+  cost?: CostType | CostType[];
+  difficulty?: Difficulty | Difficulty[];
 
-	// Ranges
-	min_dr?: number;
-	max_dr?: number;
+  // Ranges
+  min_dr?: number;
+  max_dr?: number;
 
-	// Boolean filters
-	verified_only?: boolean;
-	instant_approval?: boolean;
-	requires_registration?: boolean;
+  // Boolean filters
+  verified_only?: boolean;
+  instant_approval?: boolean;
+  requires_registration?: boolean;
 
-	// Search
-	search?: string;
-	tags?: string[];
+  // Search
+  search?: string;
+  tags?: string[];
 
-	// Pagination
-	limit?: number;
-	offset?: number;
+  // Pagination
+  limit?: number;
+  offset?: number;
 
-	// Sorting
-	sort_by?: 'dr' | 'name' | 'submissions' | 'rating';
-	sort_order?: 'asc' | 'desc';
+  // Sorting
+  sort_by?: "dr" | "name" | "submissions" | "rating";
+  sort_order?: "asc" | "desc";
 }
 
 export interface GetBacklinkSitesResponse {
@@ -202,8 +202,8 @@ export interface GetBacklinkSitesResponse {
 
 // Get Site Details
 export interface GetBacklinkSiteResponse {
-	site: BacklinkSite;
-	submission: BacklinkSubmission | null;
+  // site: BacklinkSite;
+  submission: BacklinkSubmission | null;
 }
 
 // List Submissions
