@@ -5,18 +5,20 @@
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { toast } from 'svelte-sonner';
-	import type { ProjectSettingsRow, ProjectCrawlSource } from '$lib/types/project-settings.js';
+	import type { ProjectSettingsRow, ProjectCrawlSource, ProjectLocation } from '$lib/types/project-settings.js';
 	import { getContext } from 'svelte';
+	import LocationsSection from './LocationsSection.svelte';
 
 	interface Props {
 		workspace: any;
 		project: any;
 		settings: ProjectSettingsRow | null;
 		crawlSources: ProjectCrawlSource[];
+		locations?: ProjectLocation[];
 		canEdit: boolean;
 	}
 
-	let { workspace, project, settings, crawlSources: initialCrawlSources, canEdit }: Props = $props();
+	let { workspace, project, settings, crawlSources: initialCrawlSources, locations = [], canEdit }: Props = $props();
 
 	let crawlSources = $state<ProjectCrawlSource[]>(initialCrawlSources || []);
 
@@ -230,4 +232,6 @@
 			/>
 		</CardContent>
 	</Card>
+
+	<LocationsSection {workspace} {project} {locations} {canEdit} />
 </div>

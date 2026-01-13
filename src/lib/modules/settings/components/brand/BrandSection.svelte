@@ -6,17 +6,19 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { toast } from 'svelte-sonner';
-	import type { ProjectSettingsRow, BrandSettings } from '$lib/types/project-settings.js';
+	import type { ProjectSettingsRow, BrandSettings, ProjectPersona } from '$lib/types/project-settings.js';
 	import { getContext } from 'svelte';
+	import PersonasSection from './PersonasSection.svelte';
 
 	interface Props {
 		workspace: any;
 		project: any;
 		settings: ProjectSettingsRow | null;
+		personas?: ProjectPersona[];
 		canEdit: boolean;
 	}
 
-	let { workspace, project, settings, canEdit }: Props = $props();
+	let { workspace, project, settings, personas = [], canEdit }: Props = $props();
 
 	// Brand settings from JSONB
 	let brandName = $state(settings?.settings?.brand?.brand_name || '');
@@ -401,4 +403,6 @@
 			</Field.Set>
 		</CardContent>
 	</Card>
+
+	<PersonasSection {workspace} {project} {personas} {canEdit} />
 </div>

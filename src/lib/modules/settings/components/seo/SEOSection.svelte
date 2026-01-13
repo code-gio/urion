@@ -7,9 +7,11 @@
 	import type {
 		ProjectTopicCluster,
 		ProjectKeyword,
-		SeoSettings
+		SeoSettings,
+		ProjectConversionGoal
 	} from '$lib/types/project-settings.js';
 	import { getContext } from 'svelte';
+	import ConversionGoalsSection from './ConversionGoalsSection.svelte';
 
 	interface Props {
 		workspace: any;
@@ -17,10 +19,11 @@
 		clusters: ProjectTopicCluster[];
 		keywords: ProjectKeyword[];
 		seoSettings: SeoSettings;
+		goals?: ProjectConversionGoal[];
 		canEdit: boolean;
 	}
 
-	let { workspace, project, clusters: initialClusters, keywords: initialKeywords, seoSettings: initialSeoSettings, canEdit }: Props = $props();
+	let { workspace, project, clusters: initialClusters, keywords: initialKeywords, seoSettings: initialSeoSettings, goals = [], canEdit }: Props = $props();
 
 	let clusters = $state<ProjectTopicCluster[]>(initialClusters || []);
 	let keywords = $state<ProjectKeyword[]>(initialKeywords || []);
@@ -118,7 +121,7 @@
 	});
 </script>
 
-<div class="max-w-6xl space-y-6">
+<div class="w-full max-w-6xl space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold">SEO Strategy</h1>
 		<p class="text-muted-foreground">Manage topic clusters, keywords, and SEO guidelines</p>
@@ -164,4 +167,6 @@
 			<SEOGuidelinesSection bind:settings={currentSeoSettings} {canEdit} />
 		</CardContent>
 	</Card>
+
+	<ConversionGoalsSection {workspace} {project} {goals} {canEdit} />
 </div>

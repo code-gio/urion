@@ -12,7 +12,8 @@
 		SEOSection,
 		CompetitorsSection,
 		OfferingsSection,
-		ContentRulesSection
+		ContentRulesSection,
+		IntegrationsSection
 	} from '$lib/modules/settings/components';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import GlobeIcon from '@lucide/svelte/icons/globe';
@@ -21,6 +22,7 @@
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import PackageIcon from '@lucide/svelte/icons/package';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
+	import PlugIcon from '@lucide/svelte/icons/plug';
 	import type { SettingsTab } from '$lib/types/project-settings.js';
 
 	let { data }: { data: any } = $props();
@@ -41,7 +43,8 @@
 			'seo': 'seo',
 			'competitors': 'competitors',
 			'offerings': 'offerings',
-			'content-rules': 'content_rules'
+			'content-rules': 'content_rules',
+			'integrations': 'integrations'
 		};
 		if (hash && tabMap[hash]) {
 			activeTab = tabMap[hash];
@@ -58,7 +61,8 @@
 		{ id: 'seo', label: 'SEO Strategy', icon: SearchIcon, route: 'seo' },
 		{ id: 'competitors', label: 'Competitors', icon: UsersIcon, route: 'competitors' },
 		{ id: 'offerings', label: 'Offerings', icon: PackageIcon, route: 'offerings' },
-		{ id: 'content_rules', label: 'Content Rules', icon: FileTextIcon, route: 'content-rules' }
+		{ id: 'content_rules', label: 'Content Rules', icon: FileTextIcon, route: 'content-rules' },
+		{ id: 'integrations', label: 'Integrations', icon: PlugIcon, route: 'integrations' }
 	];
 
 	// State for lazy-loaded data per tab
@@ -68,6 +72,7 @@
 	let competitorsData = $state<any>(null);
 	let offeringsData = $state<any>(null);
 	let contentRulesData = $state<any>(null);
+	let integrationsData = $state<any>(null);
 	let loadingStates = $state<Record<string, boolean>>({});
 
 	// Lazy load data for each tab when activated
@@ -81,7 +86,8 @@
 			(tabId === 'seo' && seoData) ||
 			(tabId === 'competitors' && competitorsData) ||
 			(tabId === 'offerings' && offeringsData) ||
-			(tabId === 'content_rules' && contentRulesData)
+			(tabId === 'content_rules' && contentRulesData) ||
+			(tabId === 'integrations' && integrationsData)
 		) {
 			return;
 		}
@@ -93,29 +99,38 @@
 
 			switch (tabId) {
 				case 'website': {
-					const [settingsRes, crawlSourcesRes] = await Promise.all([
+					const [settingsRes, crawlSourcesRes, locationsRes] = await Promise.all([
 						fetch(`${baseUrl}/settings`),
-						fetch(`${baseUrl}/crawl-sources`)
+						fetch(`${baseUrl}/crawl-sources`),
+						fetch(`${baseUrl}/locations`)
 					]);
 					if (!settingsRes.ok) throw new Error('Failed to load settings');
 					if (!crawlSourcesRes.ok) throw new Error('Failed to load crawl sources');
 					websiteData = {
 						settings: await settingsRes.json(),
-						crawlSources: await crawlSourcesRes.json()
+						crawlSources: await crawlSourcesRes.json(),
+						locations: await locationsRes.json().catch(() => [])
 					};
 					break;
 				}
 				case 'brand': {
-					const res = await fetch(`${baseUrl}/settings`);
-					if (!res.ok) throw new Error('Failed to load settings');
-					brandData = { settings: await res.json() };
+					const [settingsRes, personasRes] = await Promise.all([
+						fetch(`${baseUrl}/settings`),
+						fetch(`${baseUrl}/personas`)
+					]);
+					if (!settingsRes.ok) throw new Error('Failed to load settings');
+					brandData = {
+						settings: await settingsRes.json(),
+						personas: await personasRes.json().catch(() => [])
+					};
 					break;
 				}
 				case 'seo': {
-					const [clustersRes, keywordsRes, settingsRes] = await Promise.all([
+					const [clustersRes, keywordsRes, settingsRes, goalsRes] = await Promise.all([
 						fetch(`${baseUrl}/topic-clusters`),
 						fetch(`${baseUrl}/keywords`),
-						fetch(`${baseUrl}/settings`)
+						fetch(`${baseUrl}/settings`),
+						fetch(`${baseUrl}/conversion-goals`)
 					]);
 					if (!clustersRes.ok) throw new Error('Failed to load topic clusters');
 					if (!keywordsRes.ok) throw new Error('Failed to load keywords');
@@ -124,7 +139,8 @@
 					seoData = {
 						clusters: await clustersRes.json(),
 						keywords: await keywordsRes.json(),
-						seoSettings: settings?.settings?.seo || {}
+						seoSettings: settings?.settings?.seo || {},
+						goals: await goalsRes.json().catch(() => [])
 					};
 					break;
 				}
@@ -144,6 +160,12 @@
 					const res = await fetch(`${baseUrl}/content-rules`);
 					if (!res.ok) throw new Error('Failed to load content rules');
 					contentRulesData = { rules: await res.json() };
+					break;
+				}
+				case 'integrations': {
+					const res = await fetch(`${baseUrl}/integrations`);
+					if (!res.ok) throw new Error('Failed to load integrations');
+					integrationsData = { integrations: await res.json() };
 					break;
 				}
 				default:
@@ -180,7 +202,8 @@
 			'seo': 'seo',
 			'competitors': 'competitors',
 			'offerings': 'offerings',
-			'content_rules': 'content-rules'
+			'content_rules': 'content-rules',
+			'integrations': 'integrations'
 		};
 		window.location.hash = routeMap[value as SettingsTab] || value;
 		loadTabData(value as SettingsTab);
@@ -220,6 +243,7 @@
 						{project}
 						settings={websiteData.settings}
 						crawlSources={websiteData.crawlSources}
+						locations={websiteData.locations}
 						{canEdit}
 					/>
 				{:else}
@@ -239,6 +263,7 @@
 						{workspace}
 						{project}
 						settings={brandData.settings}
+						personas={brandData.personas}
 						{canEdit}
 					/>
 				{:else}
@@ -260,6 +285,7 @@
 						clusters={seoData.clusters}
 						keywords={seoData.keywords}
 						seoSettings={seoData.seoSettings}
+						goals={seoData.goals}
 						{canEdit}
 					/>
 				{:else}
@@ -322,6 +348,25 @@
 				{:else}
 					<div class="flex items-center justify-center py-12">
 						<p class="text-muted-foreground">Click to load content rules</p>
+					</div>
+				{/if}
+			</Tabs.Content>
+
+			<Tabs.Content value="integrations" class="flex-1 overflow-y-auto p-6 w-full">
+				{#if loadingStates['integrations']}
+					<div class="flex items-center justify-center py-12">
+						<p class="text-muted-foreground">Loading integrations...</p>
+					</div>
+				{:else if integrationsData}
+					<IntegrationsSection
+						{workspace}
+						{project}
+						integrations={integrationsData.integrations}
+						{canEdit}
+					/>
+				{:else}
+					<div class="flex items-center justify-center py-12">
+						<p class="text-muted-foreground">Click to load integrations</p>
 					</div>
 				{/if}
 			</Tabs.Content>

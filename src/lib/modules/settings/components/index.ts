@@ -5,4 +5,5 @@ export { default as SEOSection } from './seo/SEOSection.svelte';
 export { default as CompetitorsSection } from './competitors/CompetitorsSection.svelte';
 export { default as OfferingsSection } from './offerings/OfferingsSection.svelte';
 export { default as ContentRulesSection } from './content-rules/ContentRulesSection.svelte';
+export { default as IntegrationsSection } from './integrations/IntegrationsSection.svelte';
 export { default as SettingsTabsWrapper } from './SettingsTabsWrapper.svelte';
