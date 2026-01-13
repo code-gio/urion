@@ -37,32 +37,34 @@
 	let isSaving = $state(false);
 
 	$effect(() => {
-		if (location) {
-			name = location.name || '';
-			isPrimary = location.is_primary || false;
-			addressLine1 = location.address_line1 || '';
-			addressLine2 = location.address_line2 || '';
-			city = location.city || '';
-			region = location.region || '';
-			postalCode = location.postal_code || '';
-			country = location.country || '';
-			phone = location.phone || '';
-			email = location.email || '';
-			lat = location.lat?.toString() || '';
-			lng = location.lng?.toString() || '';
-		} else {
-			name = '';
-			isPrimary = false;
-			addressLine1 = '';
-			addressLine2 = '';
-			city = '';
-			region = '';
-			postalCode = '';
-			country = '';
-			phone = '';
-			email = '';
-			lat = '';
-			lng = '';
+		if (open) {
+			if (location) {
+				name = location.name || '';
+				isPrimary = location.is_primary || false;
+				addressLine1 = location.address_line1 || '';
+				addressLine2 = location.address_line2 || '';
+				city = location.city || '';
+				region = location.region || '';
+				postalCode = location.postal_code || '';
+				country = location.country || '';
+				phone = location.phone || '';
+				email = location.email || '';
+				lat = location.lat?.toString() || '';
+				lng = location.lng?.toString() || '';
+			} else {
+				name = '';
+				isPrimary = false;
+				addressLine1 = '';
+				addressLine2 = '';
+				city = '';
+				region = '';
+				postalCode = '';
+				country = '';
+				phone = '';
+				email = '';
+				lat = '';
+				lng = '';
+			}
 		}
 	});
 
@@ -76,37 +78,39 @@
 
 			const method = location?.id ? 'PATCH' : 'POST';
 
-			const payload: any = {
-				name: name.trim() || null,
-				is_primary: isPrimary,
-				address_line1: addressLine1.trim() || null,
-				address_line2: addressLine2.trim() || null,
-				city: city.trim() || null,
-				region: region.trim() || null,
-				postal_code: postalCode.trim() || null,
-				country: country.trim() || null,
-				phone: phone.trim() || null,
-				email: email.trim() || null,
-				hours: location?.hours || {}
-			};
+		const payload: any = {
+			name: (name || '').trim() || null,
+			is_primary: isPrimary,
+			address_line1: (addressLine1 || '').trim() || null,
+			address_line2: (addressLine2 || '').trim() || null,
+			city: (city || '').trim() || null,
+			region: (region || '').trim() || null,
+			postal_code: (postalCode || '').trim() || null,
+			country: (country || '').trim() || null,
+			phone: (phone || '').trim() || null,
+			email: (email || '').trim() || null,
+			hours: location?.hours || {}
+		};
 
-			if (lat.trim()) {
-				const latNum = parseFloat(lat);
-				if (!isNaN(latNum)) {
-					payload.lat = latNum;
-				}
-			} else {
-				payload.lat = null;
+		const latTrimmed = String(lat || '').trim();
+		if (latTrimmed) {
+			const latNum = parseFloat(latTrimmed);
+			if (!isNaN(latNum)) {
+				payload.lat = latNum;
 			}
+		} else {
+			payload.lat = null;
+		}
 
-			if (lng.trim()) {
-				const lngNum = parseFloat(lng);
-				if (!isNaN(lngNum)) {
-					payload.lng = lngNum;
-				}
-			} else {
-				payload.lng = null;
+		const lngTrimmed = String(lng || '').trim();
+		if (lngTrimmed) {
+			const lngNum = parseFloat(lngTrimmed);
+			if (!isNaN(lngNum)) {
+				payload.lng = lngNum;
 			}
+		} else {
+			payload.lng = null;
+		}
 
 			const response = await fetch(urlToUse, {
 				method,

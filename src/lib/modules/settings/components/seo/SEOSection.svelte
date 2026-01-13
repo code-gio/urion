@@ -121,7 +121,7 @@
 	});
 </script>
 
-<div class="w-full max-w-6xl space-y-6">
+<div class="w-full space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold">SEO Strategy</h1>
 		<p class="text-muted-foreground">Manage topic clusters, keywords, and SEO guidelines</p>

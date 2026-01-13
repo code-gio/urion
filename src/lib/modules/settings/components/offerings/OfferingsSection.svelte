@@ -19,7 +19,7 @@
 	});
 </script>
 
-<div class="max-w-4xl space-y-6">
+<div class="w-full space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold">Offerings</h1>
 		<p class="text-muted-foreground">Manage your products and services</p>

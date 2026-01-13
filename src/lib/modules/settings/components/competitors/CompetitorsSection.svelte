@@ -20,7 +20,7 @@
 	});
 </script>
 
-<div class="max-w-4xl space-y-6">
+<div class="w-full space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold">Competitors</h1>
 		<p class="text-muted-foreground">Track and analyze your competitors</p>

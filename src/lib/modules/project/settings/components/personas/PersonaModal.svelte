@@ -31,20 +31,22 @@
 	let isSaving = $state(false);
 
 	$effect(() => {
-		if (persona) {
-			name = persona.name;
-			description = persona.description || '';
-			painPoints = persona.pain_points || [];
-			desiredOutcomes = persona.desired_outcomes || [];
-			objections = persona.objections || [];
-			vocabulary = persona.vocabulary || [];
-		} else {
-			name = '';
-			description = '';
-			painPoints = [];
-			desiredOutcomes = [];
-			objections = [];
-			vocabulary = [];
+		if (open) {
+			if (persona) {
+				name = persona.name;
+				description = persona.description || '';
+				painPoints = persona.pain_points || [];
+				desiredOutcomes = persona.desired_outcomes || [];
+				objections = persona.objections || [];
+				vocabulary = persona.vocabulary || [];
+			} else {
+				name = '';
+				description = '';
+				painPoints = [];
+				desiredOutcomes = [];
+				objections = [];
+				vocabulary = [];
+			}
 		}
 	});
 
@@ -99,7 +101,7 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="max-w-2xl">
+	<Dialog.Content class="max-w-2xl max-h-[90vh] overflow-y-auto">
 		<Dialog.Header>
 			<Dialog.Title>{persona?.id ? 'Edit Persona' : 'Add Persona'}</Dialog.Title>
 			<Dialog.Description>Define your target audience persona</Dialog.Description>

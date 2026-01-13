@@ -31,20 +31,22 @@
 	let isSaving = $state(false);
 
 	$effect(() => {
-		if (goal) {
-			name = goal.name;
-			goalType = goal.goal_type || '';
-			eventName = goal.event_name || '';
-			isPrimary = goal.is_primary || false;
-			value = goal.value?.toString() || '';
-			notes = goal.notes || '';
-		} else {
-			name = '';
-			goalType = '';
-			eventName = '';
-			isPrimary = false;
-			value = '';
-			notes = '';
+		if (open) {
+			if (goal) {
+				name = goal.name;
+				goalType = goal.goal_type || '';
+				eventName = goal.event_name || '';
+				isPrimary = goal.is_primary || false;
+				value = goal.value?.toString() || '';
+				notes = goal.notes || '';
+			} else {
+				name = '';
+				goalType = '';
+				eventName = '';
+				isPrimary = false;
+				value = '';
+				notes = '';
+			}
 		}
 	});
 

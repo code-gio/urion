@@ -43,22 +43,24 @@
 	);
 
 	$effect(() => {
-		if (rule) {
-			ruleScope = rule.rule_scope;
-			pattern = rule.pattern;
-			allowAiEdit = rule.allow_ai_edit;
-			allowAiGenerate = rule.allow_ai_generate;
-			allowIndex = rule.allow_index;
-			notes = rule.notes || '';
-		} else {
-			ruleScope = 'path_prefix';
-			pattern = '';
-			allowAiEdit = null;
-			allowAiGenerate = null;
-			allowIndex = null;
-			notes = '';
+		if (open) {
+			if (rule) {
+				ruleScope = rule.rule_scope;
+				pattern = rule.pattern;
+				allowAiEdit = rule.allow_ai_edit;
+				allowAiGenerate = rule.allow_ai_generate;
+				allowIndex = rule.allow_index;
+				notes = rule.notes || '';
+			} else {
+				ruleScope = 'path_prefix';
+				pattern = '';
+				allowAiEdit = null;
+				allowAiGenerate = null;
+				allowIndex = null;
+				notes = '';
+			}
+			regexError = null;
 		}
-		regexError = null;
 	});
 
 	// Validate regex when pattern or scope changes

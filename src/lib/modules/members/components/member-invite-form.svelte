@@ -4,7 +4,7 @@
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select';
+	import * as Select from '$lib/components/ui/select/index.js';
 	import { toast } from 'svelte-sonner';
 	import type { WorkspaceRole } from '$lib/types';
 	import { memberInviteSchema } from '../schemas/member.js';
@@ -16,6 +16,16 @@
 	let inviteEmail = $state('');
 	let inviteRole = $state<WorkspaceRole>('member');
 	let isInviting = $state(false);
+
+	const inviteRoleLabel = $derived(
+		inviteRole === 'owner'
+			? 'Owner'
+			: inviteRole === 'admin'
+				? 'Admin'
+				: inviteRole === 'member'
+					? 'Member'
+					: 'Viewer'
+	);
 
 	async function inviteMember() {
 		if (!inviteEmail.trim() || !workspaceId) {
@@ -85,17 +95,17 @@
 		</div>
 
 		<div class="space-y-2">
-			<Label for="invite-role">Role</Label>
-			<Select bind:value={inviteRole} disabled={isInviting}>
-				<SelectTrigger id="invite-role">
-					<SelectValue placeholder="Select role" />
-				</SelectTrigger>
-				<SelectContent>
-					<SelectItem value="member">Member</SelectItem>
-					<SelectItem value="admin">Admin</SelectItem>
-					<SelectItem value="viewer">Viewer</SelectItem>
-				</SelectContent>
-			</Select>
+			<Label for="member-invite-form-role">Role</Label>
+			<Select.Root type="single" bind:value={inviteRole} disabled={isInviting}>
+				<Select.Trigger id="member-invite-form-role">
+					{inviteRoleLabel}
+				</Select.Trigger>
+				<Select.Content>
+					<Select.Item value="member" label="Member">Member</Select.Item>
+					<Select.Item value="admin" label="Admin">Admin</Select.Item>
+					<Select.Item value="viewer" label="Viewer">Viewer</Select.Item>
+				</Select.Content>
+			</Select.Root>
 		</div>
 
 		<Button onclick={inviteMember} disabled={isInviting} class="w-full">

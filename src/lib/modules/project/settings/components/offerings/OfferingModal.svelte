@@ -31,20 +31,22 @@
 	let isSaving = $state(false);
 
 	$effect(() => {
-		if (offering) {
-			name = offering.name;
-			offeringType = offering.offering_type || '';
-			description = offering.description || '';
-			pricingNotes = offering.pricing_notes || '';
-			url = offering.url || '';
-			isPrimary = offering.is_primary;
-		} else {
-			name = '';
-			offeringType = '';
-			description = '';
-			pricingNotes = '';
-			url = '';
-			isPrimary = false;
+		if (open) {
+			if (offering) {
+				name = offering.name;
+				offeringType = offering.offering_type || '';
+				description = offering.description || '';
+				pricingNotes = offering.pricing_notes || '';
+				url = offering.url || '';
+				isPrimary = offering.is_primary;
+			} else {
+				name = '';
+				offeringType = '';
+				description = '';
+				pricingNotes = '';
+				url = '';
+				isPrimary = false;
+			}
 		}
 	});
 

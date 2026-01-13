@@ -153,7 +153,7 @@
 	});
 </script>
 
-<div class="w-full max-w-4xl space-y-6">
+<div class="w-full space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold">Overview</h1>
 		<p class="text-muted-foreground">Basic project information and settings</p>

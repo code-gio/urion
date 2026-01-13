@@ -19,7 +19,7 @@
 	});
 </script>
 
-<div class="max-w-4xl space-y-6">
+<div class="w-full space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold">Content Rules</h1>
 		<p class="text-muted-foreground">Define rules for content management, AI usage, and indexing</p>

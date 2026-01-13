@@ -47,18 +47,20 @@
 	);
 
 	$effect(() => {
-		if (source) {
-			sourceType = source.source_type;
-			url = source.url;
-			isPrimary = source.is_primary;
-			respectRobots = source.respect_robots;
-			notes = source.notes || '';
-		} else {
-			sourceType = 'sitemap';
-			url = '';
-			isPrimary = false;
-			respectRobots = true;
-			notes = '';
+		if (open) {
+			if (source) {
+				sourceType = source.source_type;
+				url = source.url;
+				isPrimary = source.is_primary;
+				respectRobots = source.respect_robots;
+				notes = source.notes || '';
+			} else {
+				sourceType = 'sitemap';
+				url = '';
+				isPrimary = false;
+				respectRobots = true;
+				notes = '';
+			}
 		}
 	});
 

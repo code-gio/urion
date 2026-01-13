@@ -44,7 +44,7 @@
 	}
 </script>
 
-<div class="flex h-full flex-col w-full">
+<div class="flex h-full flex-col w-full min-w-7xl max-w-7xl mx-auto">
 	<!-- Main Content -->
 	<div class="flex-1 overflow-y-auto w-full">
 		{@render children()}

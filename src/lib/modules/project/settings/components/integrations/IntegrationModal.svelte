@@ -54,18 +54,20 @@
 	);
 
 	$effect(() => {
-		if (integration) {
-			integrationType = integration.integration_type;
-			provider = integration.provider;
-			externalAccountId = integration.external_account_id || '';
-			status = integration.status;
-			notes = integration.notes || '';
-		} else {
-			integrationType = 'other';
-			provider = '';
-			externalAccountId = '';
-			status = 'active';
-			notes = '';
+		if (open) {
+			if (integration) {
+				integrationType = integration.integration_type;
+				provider = integration.provider;
+				externalAccountId = integration.external_account_id || '';
+				status = integration.status;
+				notes = integration.notes || '';
+			} else {
+				integrationType = 'other';
+				provider = '';
+				externalAccountId = '';
+				status = 'active';
+				notes = '';
+			}
 		}
 	});
 

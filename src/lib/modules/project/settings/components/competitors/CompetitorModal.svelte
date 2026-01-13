@@ -50,22 +50,24 @@
 	const priorityLabel = $derived(`${priority} - ${priority === 1 ? 'Lowest' : priority === 2 ? 'Low' : priority === 3 ? 'Medium' : priority === 4 ? 'High' : 'Highest'}`);
 
 	$effect(() => {
-		if (competitor) {
-			name = competitor.name;
-			websiteUrl = competitor.website_url || '';
-			competitorType = competitor.competitor_type;
-			positioning = competitor.positioning || '';
-			differentiators = competitor.differentiators || [];
-			notes = competitor.notes || '';
-			priority = competitor.priority;
-		} else {
-			name = '';
-			websiteUrl = '';
-			competitorType = 'other';
-			positioning = '';
-			differentiators = [];
-			notes = '';
-			priority = 3;
+		if (open) {
+			if (competitor) {
+				name = competitor.name;
+				websiteUrl = competitor.website_url || '';
+				competitorType = competitor.competitor_type;
+				positioning = competitor.positioning || '';
+				differentiators = competitor.differentiators || [];
+				notes = competitor.notes || '';
+				priority = competitor.priority;
+			} else {
+				name = '';
+				websiteUrl = '';
+				competitorType = 'other';
+				positioning = '';
+				differentiators = [];
+				notes = '';
+				priority = 3;
+			}
 		}
 	});
 

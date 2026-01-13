@@ -145,7 +145,7 @@
 	});
 </script>
 
-<div class="w-full max-w-4xl space-y-6">
+<div class="w-full space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold">Website & Crawl Sources</h1>
 		<p class="text-muted-foreground">Configure your website identity and crawling sources</p>

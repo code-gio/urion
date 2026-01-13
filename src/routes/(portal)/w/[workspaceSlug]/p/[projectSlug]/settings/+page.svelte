@@ -223,7 +223,7 @@
 				{/each}
 			</Tabs.List>
 
-			<Tabs.Content value="overview" class="flex-1 overflow-y-auto p-6 w-full">
+			<Tabs.Content value="overview" class="flex-1 overflow-y-auto p-6 min-w-7xl max-w-7xl mx-auto">
 				<OverviewSection
 					{workspace}
 					{project}
@@ -232,7 +232,7 @@
 				/>
 			</Tabs.Content>
 
-			<Tabs.Content value="website" class="flex-1 overflow-y-auto p-6 w-full">
+			<Tabs.Content value="website" class="flex-1 overflow-y-auto p-6  min-w-7xl max-w-7xl mx-auto">
 				{#if loadingStates['website']}
 					<div class="flex items-center justify-center py-12">
 						<p class="text-muted-foreground">Loading website settings...</p>
@@ -253,7 +253,7 @@
 				{/if}
 			</Tabs.Content>
 
-			<Tabs.Content value="brand" class="flex-1 overflow-y-auto p-6 w-full">
+			<Tabs.Content value="brand" class="flex-1 overflow-y-auto p-6 min-w-7xl max-w-7xl mx-auto">
 				{#if loadingStates['brand']}
 					<div class="flex items-center justify-center py-12">
 						<p class="text-muted-foreground">Loading brand settings...</p>
@@ -273,7 +273,7 @@
 				{/if}
 			</Tabs.Content>
 
-			<Tabs.Content value="seo" class="flex-1 overflow-y-auto p-6 w-full">
+			<Tabs.Content value="seo" class="flex-1 overflow-y-auto p-6 min-w-7xl max-w-7xl mx-auto">
 				{#if loadingStates['seo']}
 					<div class="flex items-center justify-center py-12">
 						<p class="text-muted-foreground">Loading SEO settings...</p>
@@ -295,7 +295,7 @@
 				{/if}
 			</Tabs.Content>
 
-			<Tabs.Content value="competitors" class="flex-1 overflow-y-auto p-6 w-full">
+			<Tabs.Content value="competitors" class="flex-1 overflow-y-auto p-6 min-w-7xl max-w-7xl mx-auto">
 				{#if loadingStates['competitors']}
 					<div class="flex items-center justify-center py-12">
 						<p class="text-muted-foreground">Loading competitors...</p>
@@ -314,7 +314,7 @@
 				{/if}
 			</Tabs.Content>
 
-			<Tabs.Content value="offerings" class="flex-1 overflow-y-auto p-6 w-full">
+			<Tabs.Content value="offerings" class="flex-1 overflow-y-auto p-6 min-w-7xl max-w-7xl mx-auto">
 				{#if loadingStates['offerings']}
 					<div class="flex items-center justify-center py-12">
 						<p class="text-muted-foreground">Loading offerings...</p>
@@ -333,7 +333,7 @@
 				{/if}
 			</Tabs.Content>
 
-			<Tabs.Content value="content_rules" class="flex-1 overflow-y-auto p-6 w-full">
+			<Tabs.Content value="content_rules" class="flex-1 overflow-y-auto p-6 min-w-7xl max-w-7xl mx-auto">
 				{#if loadingStates['content_rules']}
 					<div class="flex items-center justify-center py-12">
 						<p class="text-muted-foreground">Loading content rules...</p>
@@ -352,7 +352,7 @@
 				{/if}
 			</Tabs.Content>
 
-			<Tabs.Content value="integrations" class="flex-1 overflow-y-auto p-6 w-full">
+			<Tabs.Content value="integrations" class="flex-1 overflow-y-auto p-6 min-w-7xl max-w-7xl mx-auto">
 				{#if loadingStates['integrations']}
 					<div class="flex items-center justify-center py-12">
 						<p class="text-muted-foreground">Loading integrations...</p>
