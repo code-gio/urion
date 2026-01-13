@@ -3,15 +3,19 @@
 	import ContentRuleList from '$lib/modules/project/settings/components/content-rules/ContentRuleList.svelte';
 	import type { ProjectContentRule } from '$lib/types/project-settings.js';
 
-	let { data }: { data: any } = $props();
+	interface Props {
+		workspace: any;
+		project: any;
+		rules: ProjectContentRule[];
+		canEdit: boolean;
+	}
 
-	const workspace = $derived(data.workspace);
-	const project = $derived(data.project);
-	const canEdit = $derived(data.canEdit);
-	let rules = $state<ProjectContentRule[]>(data.rules || []);
+	let { workspace, project, rules: initialRules, canEdit }: Props = $props();
+
+	let rules = $state<ProjectContentRule[]>(initialRules || []);
 
 	$effect(() => {
-		rules = data.rules || [];
+		rules = initialRules || [];
 	});
 </script>
 

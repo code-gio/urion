@@ -3,15 +3,19 @@
 	import OfferingList from '$lib/modules/project/settings/components/offerings/OfferingList.svelte';
 	import type { ProjectOffering } from '$lib/types/project-settings.js';
 
-	let { data }: { data: any } = $props();
+	interface Props {
+		workspace: any;
+		project: any;
+		offerings: ProjectOffering[];
+		canEdit: boolean;
+	}
 
-	const workspace = $derived(data.workspace);
-	const project = $derived(data.project);
-	const canEdit = $derived(data.canEdit);
-	let offerings = $state<ProjectOffering[]>(data.offerings || []);
+	let { workspace, project, offerings: initialOfferings, canEdit }: Props = $props();
+
+	let offerings = $state<ProjectOffering[]>(initialOfferings || []);
 
 	$effect(() => {
-		offerings = data.offerings || [];
+		offerings = initialOfferings || [];
 	});
 </script>
 

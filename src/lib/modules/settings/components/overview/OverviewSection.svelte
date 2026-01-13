@@ -1,21 +1,21 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
-	import { FormSection } from '$lib/modules/project/settings';
-	import { Button } from '$lib/components/ui/button';
+	import * as Field from '$lib/components/ui/field/index.js';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { toast } from 'svelte-sonner';
 	import type { ProjectStatus } from '$lib/types';
+	import type { ProjectSettingsRow } from '$lib/types/project-settings.js';
 
-	let { data }: { data: any } = $props();
+	interface Props {
+		workspace: any;
+		project: any;
+		projectSettings: ProjectSettingsRow | null;
+		canEdit: boolean;
+	}
 
-	const workspace = $derived(data.workspace);
-	const project = $derived(data.project);
-	const projectSettings = $derived(data.projectSettings);
-	const canEdit = $derived(data.canEdit);
+	let { workspace, project, projectSettings, canEdit }: Props = $props();
 
 	let projectName = $state(project?.name || '');
 	let websiteUrl = $state(project?.website_url || '');
@@ -107,14 +107,14 @@
 				throw new Error(error.error || 'Failed to update project settings');
 			}
 
-		toast.success('Project settings updated successfully');
-		isDirty = false;
-	} catch (error) {
-		toast.error(error instanceof Error ? error.message : 'Failed to update project');
-	} finally {
-		isSaving = false;
+			toast.success('Project settings updated successfully');
+			isDirty = false;
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : 'Failed to update project');
+		} finally {
+			isSaving = false;
+		}
 	}
-}
 
 	function resetForm() {
 		if (project) {
@@ -130,7 +130,7 @@
 		isDirty = false;
 	}
 
-	// Register save and cancel handlers with parent SettingsShell
+	// Register save and cancel handlers with parent
 	const settingsShell = getContext<{
 		setActions: (actions: {
 			onSave?: () => void | Promise<void>;
@@ -153,7 +153,7 @@
 	});
 </script>
 
-<div class="max-w-3xl space-y-6">
+<div class="w-full max-w-4xl space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold">Overview</h1>
 		<p class="text-muted-foreground">Basic project information and settings</p>
@@ -164,21 +164,30 @@
 			<CardTitle>General Settings</CardTitle>
 			<CardDescription>Update your project information</CardDescription>
 		</CardHeader>
-		<CardContent class="space-y-6">
-			<FormSection title="Project Details" description="Basic information about your project">
-				<div class="space-y-4">
-					<div class="space-y-2">
-						<Label for="project-name">Project Name</Label>
+		<CardContent>
+			<Field.Set>
+				<Field.Legend>Project Details</Field.Legend>
+				<Field.Description>Basic information about your project</Field.Description>
+				<Field.Separator />
+				<Field.Group>
+					<Field.Field orientation="responsive">
+						<Field.Content>
+							<Field.Label for="project-name">Project Name</Field.Label>
+							<Field.Description>Name of your project</Field.Description>
+						</Field.Content>
 						<Input
 							id="project-name"
 							bind:value={projectName}
 							placeholder="My Project"
 							disabled={isSaving || !canEdit}
 						/>
-					</div>
-
-					<div class="space-y-2">
-						<Label for="website-url">Website URL</Label>
+					</Field.Field>
+					<Field.Separator />
+					<Field.Field orientation="responsive">
+						<Field.Content>
+							<Field.Label for="website-url">Website URL</Field.Label>
+							<Field.Description>Your project's website URL</Field.Description>
+						</Field.Content>
 						<Input
 							id="website-url"
 							bind:value={websiteUrl}
@@ -186,10 +195,13 @@
 							type="url"
 							disabled={isSaving || !canEdit}
 						/>
-					</div>
-
-					<div class="space-y-2">
-						<Label for="project-status">Status</Label>
+					</Field.Field>
+					<Field.Separator />
+					<Field.Field orientation="responsive">
+						<Field.Content>
+							<Field.Label for="project-status">Status</Field.Label>
+							<Field.Description>Project status</Field.Description>
+						</Field.Content>
 						<Select.Root
 							type="single"
 							bind:value={projectStatus}
@@ -203,53 +215,68 @@
 								<Select.Item value="archived" label="Archived">Archived</Select.Item>
 							</Select.Content>
 						</Select.Root>
-					</div>
-				</div>
-			</FormSection>
+					</Field.Field>
+				</Field.Group>
+			</Field.Set>
 
-			<FormSection
-				title="Project Metadata"
-				description="Industry, language, and target markets for your project"
-			>
-				<div class="space-y-4">
-					<div class="space-y-2">
-						<Label for="industry">Industry</Label>
+			<Field.Set>
+				<Field.Legend>Project Metadata</Field.Legend>
+				<Field.Description>Industry, language, and target markets for your project</Field.Description>
+				<Field.Separator />
+				<Field.Group>
+					<Field.Field orientation="responsive">
+						<Field.Content>
+							<Field.Label for="industry">Industry</Field.Label>
+							<Field.Description>Industry sector (e.g., SaaS, E-commerce, Healthcare)</Field.Description>
+						</Field.Content>
 						<Input
 							id="industry"
 							bind:value={industry}
 							placeholder="e.g., SaaS, E-commerce, Healthcare"
 							disabled={isSaving || !canEdit}
 						/>
-					</div>
-
-					<div class="space-y-2">
-						<Label for="primary-language">Primary Language</Label>
+					</Field.Field>
+					<Field.Separator />
+					<Field.Field orientation="responsive">
+						<Field.Content>
+							<Field.Label for="primary-language">Primary Language</Field.Label>
+							<Field.Description>Main language code (e.g., en-US, es-ES)</Field.Description>
+						</Field.Content>
 						<Input
 							id="primary-language"
 							bind:value={primaryLanguage}
 							placeholder="e.g., en-US, es-ES"
 							disabled={isSaving || !canEdit}
 						/>
-					</div>
-
-					<div class="space-y-2">
-						<Label for="target-countries">Target Countries</Label>
+					</Field.Field>
+					<Field.Separator />
+					<Field.Field orientation="responsive">
+						<Field.Content>
+							<Field.Label for="target-countries">Target Countries</Field.Label>
+							<Field.Description>Countries where your project operates (comma-separated)</Field.Description>
+						</Field.Content>
 						<Input
 							id="target-countries"
 							bind:value={targetCountries}
-							placeholder="e.g., US, MX, ES (comma-separated)"
+							placeholder="e.g., US, MX, ES"
 							disabled={isSaving || !canEdit}
 						/>
-						<p class="text-xs text-muted-foreground">Separate multiple countries with commas</p>
-					</div>
-				</div>
-			</FormSection>
+					</Field.Field>
+				</Field.Group>
+			</Field.Set>
 
-			<FormSection title="Project URL" description="The unique URL for this project">
-				<div class="p-3 bg-muted rounded-md text-sm font-mono">
-					portal.urion.ai/w/{workspace?.slug}/p/{project?.slug}
-				</div>
-			</FormSection>
+			<Field.Set>
+				<Field.Legend>Project URL</Field.Legend>
+				<Field.Description>The unique URL for this project</Field.Description>
+				<Field.Separator />
+				<Field.Group>
+					<Field.Field orientation="responsive">
+						<div class="p-3 bg-muted rounded-md text-sm font-mono">
+							portal.urion.ai/w/{workspace?.slug}/p/{project?.slug}
+						</div>
+					</Field.Field>
+				</Field.Group>
+			</Field.Set>
 		</CardContent>
 	</Card>
 </div>

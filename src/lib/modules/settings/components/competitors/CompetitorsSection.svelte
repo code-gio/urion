@@ -3,16 +3,20 @@
 	import CompetitorList from '$lib/modules/project/settings/components/competitors/CompetitorList.svelte';
 	import type { ProjectCompetitor } from '$lib/types/project-settings.js';
 
-	let { data }: { data: any } = $props();
+	interface Props {
+		workspace: any;
+		project: any;
+		competitors: ProjectCompetitor[];
+		canEdit: boolean;
+	}
 
-	const workspace = $derived(data.workspace);
-	const project = $derived(data.project);
-	const canEdit = $derived(data.canEdit);
-	let competitors = $state<ProjectCompetitor[]>(data.competitors || []);
+	let { workspace, project, competitors: initialCompetitors, canEdit }: Props = $props();
 
-	// Sync competitors when data changes
+	let competitors = $state<ProjectCompetitor[]>(initialCompetitors || []);
+
+	// Sync competitors when prop changes
 	$effect(() => {
-		competitors = data.competitors || [];
+		competitors = initialCompetitors || [];
 	});
 </script>
 

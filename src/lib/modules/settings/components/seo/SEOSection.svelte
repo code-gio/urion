@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import TopicClustersSection from '$lib/modules/project/settings/components/seo/TopicClustersSection.svelte';
 	import KeywordsSection from '$lib/modules/project/settings/components/seo/KeywordsSection.svelte';
@@ -8,38 +7,43 @@
 	import type {
 		ProjectTopicCluster,
 		ProjectKeyword,
-		SeoSettings,
-		ProjectSettingsRow
+		SeoSettings
 	} from '$lib/types/project-settings.js';
 	import { getContext } from 'svelte';
 
-	let { data }: { data: any } = $props();
+	interface Props {
+		workspace: any;
+		project: any;
+		clusters: ProjectTopicCluster[];
+		keywords: ProjectKeyword[];
+		seoSettings: SeoSettings;
+		canEdit: boolean;
+	}
 
-	const workspace = $derived(data.workspace);
-	const project = $derived(data.project);
-	const canEdit = $derived(data.canEdit);
-	let clusters = $state<ProjectTopicCluster[]>(data.clusters || []);
-	let keywords = $state<ProjectKeyword[]>(data.keywords || []);
-	const seoSettings = $derived(data.seoSettings as SeoSettings);
+	let { workspace, project, clusters: initialClusters, keywords: initialKeywords, seoSettings: initialSeoSettings, canEdit }: Props = $props();
 
-	// Sync clusters and keywords when data changes
+	let clusters = $state<ProjectTopicCluster[]>(initialClusters || []);
+	let keywords = $state<ProjectKeyword[]>(initialKeywords || []);
+	let currentSeoSettings = $state(initialSeoSettings);
+
+	// Sync clusters and keywords when props change
 	$effect(() => {
-		clusters = data.clusters || [];
-		keywords = data.keywords || [];
+		clusters = initialClusters || [];
+		keywords = initialKeywords || [];
+		currentSeoSettings = initialSeoSettings;
 	});
 
 	let isSaving = $state(false);
 	let isDirty = $state(false);
-	let currentSeoSettings = $state(seoSettings);
 
 	$effect(() => {
-		currentSeoSettings = seoSettings;
+		currentSeoSettings = initialSeoSettings;
 		isDirty = false;
 	});
 
 	$effect(() => {
 		// Check if SEO settings changed
-		isDirty = JSON.stringify(currentSeoSettings) !== JSON.stringify(seoSettings);
+		isDirty = JSON.stringify(currentSeoSettings) !== JSON.stringify(initialSeoSettings);
 	});
 
 	async function saveSettings() {
@@ -78,40 +82,40 @@
 				throw new Error(error.error || 'Failed to update SEO settings');
 			}
 
-		toast.success('SEO settings updated successfully');
+			toast.success('SEO settings updated successfully');
+			isDirty = false;
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : 'Failed to update SEO settings');
+		} finally {
+			isSaving = false;
+		}
+	}
+
+	function resetForm() {
+		currentSeoSettings = initialSeoSettings;
 		isDirty = false;
-	} catch (error) {
-		toast.error(error instanceof Error ? error.message : 'Failed to update SEO settings');
-	} finally {
-		isSaving = false;
 	}
-}
 
-function resetForm() {
-	currentSeoSettings = seoSettings;
-	isDirty = false;
-}
+	// Register save and cancel handlers with parent
+	const settingsShell = getContext<{
+		setActions: (actions: {
+			onSave?: () => void | Promise<void>;
+			onCancel?: () => void;
+			isDirty?: boolean;
+			isSaving?: boolean;
+		}) => void;
+	}>('settings-shell');
 
-// Register save and cancel handlers with parent SettingsShell
-const settingsShell = getContext<{
-	setActions: (actions: {
-		onSave?: () => void | Promise<void>;
-		onCancel?: () => void;
-		isDirty?: boolean;
-		isSaving?: boolean;
-	}) => void;
-}>('settings-shell');
-
-$effect(() => {
-	if (canEdit && settingsShell) {
-		settingsShell.setActions({
-			onSave: saveSettings,
-			onCancel: resetForm,
-			isDirty,
-			isSaving
-		});
-	}
-});
+	$effect(() => {
+		if (canEdit && settingsShell) {
+			settingsShell.setActions({
+				onSave: saveSettings,
+				onCancel: resetForm,
+				isDirty,
+				isSaving
+			});
+		}
+	});
 </script>
 
 <div class="max-w-6xl space-y-6">
@@ -126,12 +130,12 @@ $effect(() => {
 			<CardDescription>Organize your content into topic clusters and pillars</CardDescription>
 		</CardHeader>
 		<CardContent>
-		<TopicClustersSection
-			bind:clusters={clusters}
-			workspaceId={workspace.id}
-			projectId={project.id}
-			{canEdit}
-		/>
+			<TopicClustersSection
+				bind:clusters={clusters}
+				workspaceId={workspace.id}
+				projectId={project.id}
+				{canEdit}
+			/>
 		</CardContent>
 	</Card>
 
@@ -141,13 +145,13 @@ $effect(() => {
 			<CardDescription>Manage keywords, assign to clusters, and set target pages</CardDescription>
 		</CardHeader>
 		<CardContent>
-		<KeywordsSection
-			bind:keywords={keywords}
-			{clusters}
-			workspaceId={workspace.id}
-			projectId={project.id}
-			{canEdit}
-		/>
+			<KeywordsSection
+				bind:keywords={keywords}
+				{clusters}
+				workspaceId={workspace.id}
+				projectId={project.id}
+				{canEdit}
+			/>
 		</CardContent>
 	</Card>
 

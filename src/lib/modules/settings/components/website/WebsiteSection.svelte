@@ -1,25 +1,28 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { FormSection, MultiValueInput } from '$lib/modules/project/settings';
+	import { MultiValueInput } from '$lib/modules/project/settings';
 	import CrawlSourceList from '$lib/modules/project/settings/components/website/CrawlSourceList.svelte';
+	import * as Field from '$lib/components/ui/field/index.js';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 	import { toast } from 'svelte-sonner';
 	import type { ProjectSettingsRow, ProjectCrawlSource } from '$lib/types/project-settings.js';
 	import { getContext } from 'svelte';
 
-	let { data }: { data: any } = $props();
+	interface Props {
+		workspace: any;
+		project: any;
+		settings: ProjectSettingsRow | null;
+		crawlSources: ProjectCrawlSource[];
+		canEdit: boolean;
+	}
 
-	const workspace = $derived(data.workspace);
-	const project = $derived(data.project);
-	const canEdit = $derived(data.canEdit);
-	const settings = $derived(data.settings as ProjectSettingsRow | null);
-	let crawlSources = $state<ProjectCrawlSource[]>(data.crawlSources || []);
+	let { workspace, project, settings, crawlSources: initialCrawlSources, canEdit }: Props = $props();
 
-	// Sync crawlSources when data changes
+	let crawlSources = $state<ProjectCrawlSource[]>(initialCrawlSources || []);
+
+	// Sync crawlSources when prop changes
 	$effect(() => {
-		crawlSources = data.crawlSources || [];
+		crawlSources = initialCrawlSources || [];
 	});
 
 	// Site settings from JSONB
@@ -94,14 +97,14 @@
 				throw new Error(error.error || 'Failed to update settings');
 			}
 
-		toast.success('Website settings updated successfully');
-		isDirty = false;
-	} catch (error) {
-		toast.error(error instanceof Error ? error.message : 'Failed to update settings');
-	} finally {
-		isSaving = false;
+			toast.success('Website settings updated successfully');
+			isDirty = false;
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : 'Failed to update settings');
+		} finally {
+			isSaving = false;
+		}
 	}
-}
 
 	function resetForm() {
 		if (settings) {
@@ -118,7 +121,7 @@
 		toast.success('Crawl source saved');
 	}
 
-	// Register save and cancel handlers with parent SettingsShell
+	// Register save and cancel handlers with parent
 	const settingsShell = getContext<{
 		setActions: (actions: {
 			onSave?: () => void | Promise<void>;
@@ -140,7 +143,7 @@
 	});
 </script>
 
-<div class="max-w-4xl space-y-6">
+<div class="w-full max-w-4xl space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold">Website & Crawl Sources</h1>
 		<p class="text-muted-foreground">Configure your website identity and crawling sources</p>
@@ -151,51 +154,64 @@
 			<CardTitle>Website Identity</CardTitle>
 			<CardDescription>Basic information about your website</CardDescription>
 		</CardHeader>
-		<CardContent class="space-y-6">
-			<FormSection
-				title="Canonical Domain"
-				description="The primary domain for your website (e.g., example.com)"
-			>
-				<Input
-					bind:value={canonicalDomain}
-					placeholder="example.com"
-					disabled={isSaving || !canEdit}
-				/>
-			</FormSection>
-
-			<FormSection
-				title="Primary Language"
-				description="The main language code for your website (e.g., en, es, fr)"
-			>
-				<Input
-					bind:value={primaryLanguage}
-					placeholder="en"
-					disabled={isSaving || !canEdit}
-					maxlength="10"
-				/>
-			</FormSection>
-
-			<FormSection
-				title="Languages"
-				description="All languages your website supports (e.g., en-US, es-ES)"
-			>
-				<MultiValueInput
-					bind:values={languages}
-					placeholder="en-US"
-					disabled={!canEdit}
-				/>
-			</FormSection>
-
-			<FormSection
-				title="Target Countries"
-				description="Countries where your website primarily operates"
-			>
-				<MultiValueInput
-					bind:values={targetCountries}
-					placeholder="US"
-					disabled={!canEdit}
-				/>
-			</FormSection>
+		<CardContent>
+			<Field.Set>
+				<Field.Legend>Website Configuration</Field.Legend>
+				<Field.Description>Configure your website identity and language settings</Field.Description>
+				<Field.Separator />
+				<Field.Group>
+					<Field.Field orientation="responsive">
+						<Field.Content>
+							<Field.Label for="canonical-domain">Canonical Domain</Field.Label>
+							<Field.Description>The primary domain for your website (e.g., example.com)</Field.Description>
+						</Field.Content>
+						<Input
+							id="canonical-domain"
+							bind:value={canonicalDomain}
+							placeholder="example.com"
+							disabled={isSaving || !canEdit}
+						/>
+					</Field.Field>
+					<Field.Separator />
+					<Field.Field orientation="responsive">
+						<Field.Content>
+							<Field.Label for="primary-language">Primary Language</Field.Label>
+							<Field.Description>The main language code for your website (e.g., en, es, fr)</Field.Description>
+						</Field.Content>
+						<Input
+							id="primary-language"
+							bind:value={primaryLanguage}
+							placeholder="en"
+							disabled={isSaving || !canEdit}
+							maxlength="10"
+						/>
+					</Field.Field>
+					<Field.Separator />
+					<Field.Field orientation="responsive">
+						<Field.Content>
+							<Field.Label for="languages">Languages</Field.Label>
+							<Field.Description>All languages your website supports (e.g., en-US, es-ES)</Field.Description>
+						</Field.Content>
+						<MultiValueInput
+							bind:values={languages}
+							placeholder="en-US"
+							disabled={!canEdit}
+						/>
+					</Field.Field>
+					<Field.Separator />
+					<Field.Field orientation="responsive">
+						<Field.Content>
+							<Field.Label for="target-countries">Target Countries</Field.Label>
+							<Field.Description>Countries where your website primarily operates</Field.Description>
+						</Field.Content>
+						<MultiValueInput
+							bind:values={targetCountries}
+							placeholder="US"
+							disabled={!canEdit}
+						/>
+					</Field.Field>
+				</Field.Group>
+			</Field.Set>
 		</CardContent>
 	</Card>
 
