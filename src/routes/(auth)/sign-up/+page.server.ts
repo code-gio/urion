@@ -1,4 +1,5 @@
 import type { PageServerLoad, Actions } from "./$types.js";
+import { redirect } from "@sveltejs/kit";
 import { superValidate, setError, fail } from "sveltekit-superforms";
 import { zod4 } from "sveltekit-superforms/adapters";
 
@@ -101,8 +102,8 @@ export const actions: Actions = {
 
     try {
       // Check if session exists
-      const session = await safeGetSession();
-      if (session && session.user) {
+      const { session, user } = await safeGetSession();
+      if (session && user) {
         return fail(400, {
           form,
           message: "You are already logged in",
@@ -230,11 +231,11 @@ export const actions: Actions = {
 
       // Auto-accept pending invitations if user is immediately logged in
       try {
-        const { data: session } = await safeGetSession();
-        if (session?.user?.email) {
+        const { user: invitationUser } = await safeGetSession();
+        if (invitationUser?.email) {
           await supabase.rpc('accept_workspace_invitation', {
-            user_uuid: session.user.id,
-            user_email: session.user.email,
+            user_uuid: invitationUser.id,
+            user_email: invitationUser.email,
           });
         }
       } catch {
@@ -248,10 +249,10 @@ export const actions: Actions = {
       }
 
       // Smart redirect based on workspace count
-      const { data: session } = await safeGetSession();
-      if (session?.user) {
+      const { user: redirectUser } = await safeGetSession();
+      if (redirectUser) {
         const { data: workspaces } = await supabase.rpc('get_user_workspaces', {
-          user_uuid: session.user.id,
+          user_uuid: redirectUser.id,
         });
 
         if (!workspaces || workspaces.length === 0) {
