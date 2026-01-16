@@ -11,6 +11,8 @@
 		members: WorkspaceMemberWithProfile[];
 		pendingInvites: WorkspaceMemberWithProfile[];
 	} = $props();
+
+	
 </script>
 
 {#if pendingInvites.length > 0}
