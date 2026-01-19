@@ -4,6 +4,8 @@ import { zod4 } from "sveltekit-superforms/adapters";
 import { forgotPasswordSchema } from "$lib/modules/auth/schemas/forgot-password.js";
 import { AuthErrorMessages, type AuthErrorType } from "$lib/modules/auth/types/index";
 import { AuthError } from "@supabase/supabase-js";
+import { PUBLIC_APP_URL } from "$env/static/public";
+import { isDevelopment } from "$lib/server/env";
 
 const AUTH_FORM_ID = "forgot-password-form";
 const MAX_ATTEMPTS = 3;
@@ -60,9 +62,34 @@ export const actions: Actions = {
         });
       }
 
+      // Determine the correct redirect URL
+      let redirectUrl: string;
+      
+      if (isDevelopment) {
+        // In development, use the request origin
+        const host = event.request.headers.get("host") || url.host;
+        const protocol = host?.includes("localhost") ? "http:" : (url.protocol || "https:");
+        const origin = `${protocol}//${host}`;
+        redirectUrl = `${origin}/reset-password/confirm`;
+      } else {
+        // In production, prioritize PUBLIC_APP_URL, then construct from request headers
+        if (PUBLIC_APP_URL) {
+          redirectUrl = `${PUBLIC_APP_URL}/reset-password/confirm`;
+        } else {
+          // Fallback: construct from request headers (more reliable than url.origin)
+          const host = event.request.headers.get("host") || url.host;
+          const forwardedProto = event.request.headers.get("x-forwarded-proto");
+          const protocol = forwardedProto 
+            ? `${forwardedProto}:`
+            : (host?.includes("localhost") ? "http:" : "https:");
+          const origin = `${protocol}//${host}`;
+          redirectUrl = `${origin}/reset-password/confirm`;
+        }
+      }
+
       // Send password reset email
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${url.origin}/reset-password/confirm`,
+        redirectTo: redirectUrl,
       });
 
       if (error) {

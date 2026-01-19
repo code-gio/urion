@@ -69,8 +69,8 @@ export const actions: Actions = {
       }
 
       // Determine the correct redirect URL
-      // In development, prefer the actual request origin (localhost)
-      // In production, use PUBLIC_APP_URL if set, otherwise use request origin
+      // In production, always use PUBLIC_APP_URL if set, otherwise construct from request headers
+      // In development, use localhost logic
       let redirectUrl: string;
       
       if (isDevelopment) {
@@ -80,10 +80,19 @@ export const actions: Actions = {
         const origin = `${protocol}//${host}`;
         redirectUrl = `${origin}/auth/callback`;
       } else {
-        // In production, use PUBLIC_APP_URL if available, otherwise request origin
-        redirectUrl = PUBLIC_APP_URL 
-          ? `${PUBLIC_APP_URL}/auth/callback`
-          : `${event.url.origin}/auth/callback`;
+        // In production, prioritize PUBLIC_APP_URL, then construct from request headers
+        if (PUBLIC_APP_URL) {
+          redirectUrl = `${PUBLIC_APP_URL}/auth/callback`;
+        } else {
+          // Fallback: construct from request headers (more reliable than event.url.origin)
+          const host = event.request.headers.get("host") || event.url.host;
+          const forwardedProto = event.request.headers.get("x-forwarded-proto");
+          const protocol = forwardedProto 
+            ? `${forwardedProto}:`
+            : (host?.includes("localhost") ? "http:" : "https:");
+          const origin = `${protocol}//${host}`;
+          redirectUrl = `${origin}/auth/callback`;
+        }
       }
 
       // Send magic link
