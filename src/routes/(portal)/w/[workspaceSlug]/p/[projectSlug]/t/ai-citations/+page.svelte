@@ -223,11 +223,17 @@
     </Tabs.Content>
 
     <Tabs.Content value="sources" class="mt-6">
-      <SourcesTab />
+      <SourcesTab workspace={data.workspace} project={data.project} />
     </Tabs.Content>
 
     <Tabs.Content value="settings" class="mt-6">
-      <SettingsTab />
+      <SettingsTab
+        workspace={data.workspace}
+        project={data.project}
+        tool={data.tool}
+        toolActivation={data.toolActivation}
+        canEdit={data.canEdit}
+      />
     </Tabs.Content>
   </Tabs.Root>
 </div>

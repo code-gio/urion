@@ -21,22 +21,17 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
   let toolActivation = null;
   
   if (tool) {
-    const { data: activation } = await locals.supabase
+    const { data: activation, error: activationError } = await locals.supabase
       .from("project_tools")
       .select("*")
       .eq("project_id", project.id)
       .eq("tool_id", tool.id)
-      .single();
+      .maybeSingle();
     
-    toolActivation = activation;
+    if (!activationError && activation) {
+      toolActivation = activation;
+    }
   }
-
-  console.log("=== AI Citations Page Server Load ===");
-  console.log("project.id:", project.id);
-  console.log("queries data:", queries);
-  console.log("queries error:", error);
-  console.log("queries count:", queries?.length || 0);
-  console.log("=====================================");
 
   return {
     workspace,
